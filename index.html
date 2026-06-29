@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>매치코치 — 스포츠강사 구인구직</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+  :root {
+    --navy:#0F1B2D; --navy-mid:#1A2E46; --navy-light:#243650;
+    --orange:#FF5C1A; --orange-soft:#FF7A40;
+    --cream:#F5F3EF; --gray-100:#F0EEE9; --gray-300:#C8C4BC; --gray-500:#8A8580;
+    --text:#1A1612; --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+
+  /* ── LOGIN SCREEN ── */
+  #loginScreen{
+    position:fixed;inset:0;background:var(--navy);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:1000;gap:32px;
+  }
+  .login-logo{text-align:center;}
+  .login-mark{
+    width:72px;height:72px;background:var(--orange);border-radius:16px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:32px;font-weight:900;color:white;margin:0 auto 16px;
+  }
+  .login-title{font-size:28px;font-weight:900;color:white;letter-spacing:-0.5px;}
+  .login-title span{color:var(--orange);}
+  .login-sub{font-size:14px;color:var(--gray-300);margin-top:8px;text-align:center;line-height:1.6;}
+  .btn-google{
+    display:flex;align-items:center;gap:12px;
+    background:white;color:#1F1F1F;
+    border:none;border-radius:12px;
+    padding:14px 28px;font-size:15px;font-weight:700;
+    cursor:pointer;font-family:'Noto Sans KR',sans-serif;
+    box-shadow:0 4px 20px rgba(0,0,0,0.3);
+    transition:transform 0.15s,box-shadow 0.15s;
+  }
+  .btn-google:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.4);}
+  .btn-google svg{width:20px;height:20px;flex-shrink:0;}
+  .login-note{font-size:12px;color:var(--gray-500);text-align:center;max-width:280px;line-height:1.6;}
+
+  /* ── APP (hidden until login) ── */
+  #app{display:none;}
+
+  /* ── HEADER ── */
+  header{background:var(--navy);position:sticky;top:0;z-index:100;border-bottom:2px solid var(--orange);}
+  .header-inner{
+    max-width:1280px;margin:0 auto;padding:0 24px;
+    display:flex;align-items:center;justify-content:space-between;height:60px;
+  }
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo-mark{
+    width:32px;height:32px;background:var(--orange);border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;color:white;font-size:16px;
+  }
+  .logo-text{color:white;font-weight:700;font-size:17px;}
+  .logo-text span{color:var(--orange);}
+  .header-right{display:flex;align-items:center;gap:16px;}
+  .header-stats{display:flex;gap:20px;align-items:center;}
+  .stat-pill{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gray-300);display:flex;align-items:center;gap:5px;}
+  .stat-pill strong{color:var(--orange);font-size:14px;}
+  .user-info{display:flex;align-items:center;gap:10px;}
+  .user-avatar{
+    width:32px;height:32px;border-radius:50%;
+    border:2px solid var(--orange);object-fit:cover;
+  }
+  .user-name{font-size:13px;color:var(--gray-300);}
+  .btn-logout{
+    padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);
+    background:transparent;color:var(--gray-300);font-size:12px;cursor:pointer;
+    font-family:'Noto Sans KR',sans-serif;transition:all 0.15s;
+  }
+  .btn-logout:hover{background:rgba(255,255,255,0.1);color:white;}
+
+  /* ── TOOLBAR ── */
+  .toolbar{background:var(--navy-mid);border-bottom:1px solid var(--navy-light);}
+  .toolbar-inner{
+    max-width:1280px;margin:0 auto;padding:12px 24px;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .search-box{
+    flex:1;min-width:200px;
+    display:flex;align-items:center;gap:8px;
+    background:var(--navy-light);border:1px solid rgba(255,255,255,0.1);
+    border-radius:8px;padding:8px 14px;
+  }
+  .search-box input{
+    background:none;border:none;outline:none;color:white;font-size:14px;width:100%;
+    font-family:'Noto Sans KR',sans-serif;
+  }
+  .search-box input::placeholder{color:var(--gray-500);}
+
+  /* 필터 그룹 */
+  .filter-row{
+    max-width:1280px;margin:0 auto;padding:10px 24px;
+    display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+    background:var(--navy-mid);border-bottom:1px solid var(--navy-light);
+  }
+  .filter-label{font-size:11px;color:var(--gray-500);font-weight:600;letter-spacing:0.5px;min-width:40px;}
+  .filter-chip{
+    padding:5px 13px;border-radius:20px;
+    border:1px solid rgba(255,255,255,0.12);
+    background:transparent;color:var(--gray-300);
+    font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;
+    transition:all 0.15s;
+  }
+  .filter-chip:hover,.filter-chip.active{background:var(--orange);border-color:var(--orange);color:white;}
+  .filter-divider{width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 4px;}
+
+  .btn-add{
+    display:flex;align-items:center;gap:6px;
+    background:var(--orange);color:white;border:none;border-radius:8px;
+    padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;
+    white-space:nowrap;font-family:'Noto Sans KR',sans-serif;transition:background 0.15s;
+  }
+  .btn-add:hover{background:var(--orange-soft);}
+
+  /* ── VIEW CONTROLS ── */
+  .view-controls{
+    max-width:1280px;margin:0 auto;
+    padding:14px 24px 8px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .result-count{font-size:13px;color:var(--gray-500);}
+  .result-count strong{color:var(--text);}
+  .view-toggle{display:flex;gap:4px;}
+  .view-btn{
+    padding:6px 10px;border-radius:6px;border:1px solid var(--gray-300);
+    background:transparent;cursor:pointer;color:var(--gray-500);transition:all 0.15s;
+  }
+  .view-btn.active{background:var(--navy);color:white;border-color:var(--navy);}
+
+  /* ── GRID ── */
+  .grid-container{
+    max-width:1280px;margin:0 auto;padding:0 24px 60px;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;
+  }
+  .grid-container.list-view{grid-template-columns:1fr;}
+
+  /* ── CARD ── */
+  .card{
+    background:white;border-radius:12px;overflow:hidden;
+    box-shadow:0 1px 3px rgba(0,0,0,0.08);
+    transition:transform 0.15s,box-shadow 0.15s;cursor:pointer;position:relative;
+  }
+  .card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.12);}
+  .card-mine-badge{
+    position:absolute;top:12px;right:12px;
+    background:var(--navy);color:white;
+    font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;
+    z-index:1;
+  }
+  .card-sport-bar{height:4px;width:100%;}
+  .card-body{padding:18px 20px 14px;}
+  .card-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:12px;}
+  .avatar{
+    width:48px;height:48px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;font-weight:700;color:white;flex-shrink:0;overflow:hidden;
+  }
+  .avatar img{width:100%;height:100%;object-fit:cover;}
+  .card-meta{flex:1;min-width:0;}
+  .card-name{font-size:16px;font-weight:700;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .card-sub{font-size:12px;color:var(--gray-500);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .dot{color:var(--gray-300);}
+  .status-badge{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;
+  }
+  .status-badge.available{background:#DCFCE7;color:#15803D;}
+  .status-badge.employed{background:#FEF3C7;color:#B45309;}
+  .status-badge.seeking{background:#EFF6FF;color:#1D4ED8;}
+  .status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .sports-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .sport-tag{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;color:white;}
+  .card-info-row{
+    display:flex;gap:16px;font-size:12px;color:var(--gray-500);
+    border-top:1px solid var(--gray-100);padding-top:12px;margin-top:4px;
+  }
+  .card-actions{display:flex;gap:6px;padding:0 20px 14px;}
+  .btn-sm{
+    flex:1;padding:7px;border-radius:7px;font-size:12px;font-weight:600;
+    cursor:pointer;border:none;font-family:'Noto Sans KR',sans-serif;transition:all 0.15s;
+  }
+  .btn-edit{background:var(--gray-100);color:var(--text);}
+  .btn-edit:hover{background:var(--gray-300);}
+  .btn-contact{background:var(--orange);color:white;}
+  .btn-contact:hover{background:var(--orange-soft);}
+  .btn-delete{background:#FEE2E2;color:#DC2626;max-width:40px;}
+  .btn-delete:hover{background:#FECACA;}
+  .btn-view-only{background:var(--gray-100);color:var(--gray-500);cursor:default;}
+
+  /* list view */
+  .list-view .card-body{display:flex;align-items:center;gap:16px;padding:14px 20px;}
+  .list-view .card-top{margin-bottom:0;flex:1;}
+  .list-view .sports-tags{margin-bottom:0;}
+  .list-view .card-info-row{border-top:none;padding-top:0;margin-top:0;flex-shrink:0;}
+  .list-view .card-sport-bar{display:none;}
+  .list-view .card{border-left:4px solid;}
+  .list-view .card-actions{padding:0 20px 0 0;flex-shrink:0;width:auto;}
+
+  /* ── MODAL ── */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(15,27,45,0.75);
+    backdrop-filter:blur(4px);z-index:200;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+    opacity:0;pointer-events:none;transition:opacity 0.2s;
+  }
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal{
+    background:white;border-radius:16px;width:100%;max-width:560px;
+    max-height:90vh;overflow-y:auto;
+    transform:translateY(20px);transition:transform 0.2s;
+  }
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal-header{
+    padding:24px 28px 20px;
+    display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;background:white;z-index:1;
+    border-bottom:1px solid var(--gray-100);
+  }
+  .modal-title{font-size:18px;font-weight:700;}
+  .btn-close{
+    width:32px;height:32px;border-radius:8px;
+    background:var(--gray-100);border:none;cursor:pointer;
+    font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);
+  }
+  .modal-body{padding:24px 28px 28px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .form-group{display:flex;flex-direction:column;gap:6px;}
+  .form-group.full{grid-column:1/-1;}
+  label{font-size:12px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;}
+  input,select,textarea{
+    padding:10px 14px;border-radius:8px;border:1.5px solid var(--gray-300);
+    font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;
+    transition:border-color 0.15s;color:var(--text);
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--orange);}
+  textarea{resize:vertical;min-height:80px;}
+  .sport-selector{display:flex;flex-wrap:wrap;gap:8px;}
+  .sport-option{
+    padding:6px 14px;border-radius:20px;border:1.5px solid var(--gray-300);
+    font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;
+    transition:all 0.15s;background:white;
+  }
+  .sport-option.selected{color:white;border-color:transparent;}
+  .modal-footer{
+    display:flex;gap:10px;padding-top:20px;
+    border-top:1px solid var(--gray-100);margin-top:20px;
+  }
+  .btn-cancel{
+    flex:1;padding:12px;border-radius:9px;background:var(--gray-100);
+    color:var(--text);border:none;font-size:14px;font-weight:600;
+    cursor:pointer;font-family:'Noto Sans KR',sans-serif;
+  }
+  .btn-save{
+    flex:2;padding:12px;border-radius:9px;background:var(--orange);
+    color:white;border:none;font-size:14px;font-weight:700;
+    cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:background 0.15s;
+  }
+  .btn-save:hover{background:var(--orange-soft);}
+
+  /* ── DETAIL MODAL ── */
+  .detail-hero{
+    background:var(--navy);padding:28px;
+    display:flex;align-items:center;gap:18px;position:relative;
+  }
+  .detail-avatar{
+    width:64px;height:64px;border-radius:50%;
+    font-size:26px;display:flex;align-items:center;justify-content:center;
+    font-weight:700;color:white;flex-shrink:0;overflow:hidden;
+  }
+  .detail-avatar img{width:100%;height:100%;object-fit:cover;}
+  .detail-name{font-size:22px;font-weight:900;color:white;margin-bottom:4px;}
+  .detail-sub{font-size:13px;color:var(--gray-300);}
+  .detail-body{padding:24px 28px 28px;}
+  .detail-section{margin-bottom:20px;}
+  .detail-label{font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;}
+  .detail-text{font-size:14px;line-height:1.6;color:var(--text);}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .detail-value{font-size:14px;font-weight:600;color:var(--text);}
+  .detail-actions{display:flex;gap:10px;padding:0 28px 28px;}
+
+  /* ── EMPTY ── */
+  .empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--gray-500);}
+  .empty-state .icon{font-size:48px;margin-bottom:16px;}
+  .empty-state h3{font-size:18px;color:var(--text);margin-bottom:8px;}
+
+  /* ── LOADING ── */
+  .loading-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--gray-500);}
+  .spinner{
+    width:36px;height:36px;border:3px solid var(--gray-300);
+    border-top-color:var(--orange);border-radius:50%;
+    animation:spin 0.8s linear infinite;margin:0 auto 16px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ── TOAST ── */
+  .toast{
+    position:fixed;bottom:24px;right:24px;
+    background:var(--navy);color:white;
+    padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;
+    box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:999;
+    transform:translateY(80px);opacity:0;transition:all 0.3s;
+    border-left:4px solid var(--orange);
+  }
+  .toast.show{transform:translateY(0);opacity:1;}
+
+  /* ── MY POST HIGHLIGHT ── */
+  .card.is-mine{box-shadow:0 0 0 2px var(--orange),0 4px 12px rgba(255,92,26,0.15);}
+
+  @media(max-width:640px){
+    .header-stats{display:none;}
+    .form-grid{grid-template-columns:1fr;}
+    .detail-grid{grid-template-columns:1fr;}
+    .grid-container{padding:0 12px 40px;}
+    .filter-row{padding:10px 12px;}
+    .user-name{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="loginScreen">
+  <div class="login-logo">
+    <div class="login-mark">MC</div>
+    <div class="login-title">매치<span>코치</span></div>
+    <div class="login-sub">스포츠 강사 구인구직 플랫폼<br>구글 계정으로 본인인증 후 이용하세요</div>
+  </div>
+  <button class="btn-google" onclick="signInWithGoogle()">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+    Google 계정으로 시작하기
+  </button>
+  <div class="login-note">매치코치 커뮤니티 회원이라면 누구나 가입 가능합니다. 본인이 등록한 글만 수정/삭제할 수 있습니다.</div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="app">
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-mark">MC</div>
+        <div class="logo-text">매치<span>코치</span> 구인구직</div>
+      </div>
+      <div class="header-right">
+        <div class="header-stats">
+          <div class="stat-pill">전체 <strong id="totalCount">0</strong>명</div>
+          <div class="stat-pill">구직중 <strong id="seekingCount">0</strong></div>
+          <div class="stat-pill">채용중 <strong id="hiringCount">0</strong></div>
+        </div>
+        <div class="user-info">
+          <img class="user-avatar" id="userAvatar" src="" alt="">
+          <span class="user-name" id="userName"></span>
+          <button class="btn-logout" onclick="signOut()">로그아웃</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A8580" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="이름, 지역, 종목으로 검색...">
+      </div>
+      <button class="btn-add" onclick="openAddModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+        글 올리기
+      </button>
+    </div>
+  </div>
+
+  <!-- 필터 -->
+  <div class="filter-row">
+    <span class="filter-label">상태</span>
+    <button class="filter-chip active" data-type="status" data-filter="all">전체</button>
+    <button class="filter-chip" data-type="status" data-filter="available">구직중</button>
+    <button class="filter-chip" data-type="status" data-filter="employed">재직중</button>
+    <button class="filter-chip" data-type="status" data-filter="seeking">채용중</button>
+    <div class="filter-divider"></div>
+    <span class="filter-label">종목</span>
+    <button class="filter-chip active" data-type="sport" data-filter="all">전체</button>
+    <button class="filter-chip" data-type="sport" data-filter="jump">줄넘기</button>
+    <button class="filter-chip" data-type="sport" data-filter="badminton">배드민턴</button>
+    <button class="filter-chip" data-type="sport" data-filter="climbing">클라이밍</button>
+    <button class="filter-chip" data-type="sport" data-filter="dance">댄스</button>
+    <button class="filter-chip" data-type="sport" data-filter="fitness">피트니스</button>
+    <button class="filter-chip" data-type="sport" data-filter="swimming">수영</button>
+    <button class="filter-chip" data-type="sport" data-filter="tennis">테니스</button>
+    <button class="filter-chip" data-type="sport" data-filter="etc">기타</button>
+    <div class="filter-divider"></div>
+    <span class="filter-label">성별</span>
+    <button class="filter-chip active" data-type="gender" data-filter="all">전체</button>
+    <button class="filter-chip" data-type="gender" data-filter="남">남성</button>
+    <button class="filter-chip" data-type="gender" data-filter="여">여성</button>
+  </div>
+
+  <div class="view-controls">
+    <div class="result-count"><strong id="filteredCount">0</strong>개 표시 중</div>
+    <div class="view-toggle">
+      <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="카드">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </button>
+      <button class="view-btn" id="listViewBtn" onclick="setView('list')" title="리스트">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="grid-container" id="cardGrid">
+    <div class="loading-state"><div class="spinner"></div>불러오는 중...</div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">구인구직 등록</div>
+      <button class="btn-close" onclick="closeModal('editModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>이름 *</label>
+          <input type="text" id="f_name" placeholder="홍길동">
+        </div>
+        <div class="form-group">
+          <label>연락처 *</label>
+          <input type="text" id="f_phone" placeholder="010-0000-0000">
+        </div>
+        <div class="form-group">
+          <label>성별</label>
+          <select id="f_gender">
+            <option value="">선택</option>
+            <option>남</option>
+            <option>여</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>나이</label>
+          <input type="number" id="f_age" placeholder="28">
+        </div>
+        <div class="form-group">
+          <label>활동 지역 *</label>
+          <input type="text" id="f_region" placeholder="서울 강남구">
+        </div>
+        <div class="form-group">
+          <label>경력</label>
+          <input type="text" id="f_career" placeholder="5년">
+        </div>
+        <div class="form-group">
+          <label>자격증</label>
+          <input type="text" id="f_cert" placeholder="생활스포츠지도사 2급">
+        </div>
+        <div class="form-group">
+          <label>희망 급여</label>
+          <input type="text" id="f_salary" placeholder="월 250만원 또는 협의">
+        </div>
+        <div class="form-group">
+          <label>상태 *</label>
+          <select id="f_status">
+            <option value="available">구직중 (강사가 일자리 찾는 중)</option>
+            <option value="employed">재직중 (현재 활동 중)</option>
+            <option value="seeking">채용중 (학원/시설이 강사 모집)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>SNS / 링크</label>
+          <input type="text" id="f_sns" placeholder="@인스타그램 or 링크">
+        </div>
+        <div class="form-group full">
+          <label>담당 종목 *</label>
+          <div class="sport-selector" id="sportSelector"></div>
+        </div>
+        <div class="form-group full">
+          <label>소개 / 글 내용</label>
+          <textarea id="f_bio" placeholder="경력, 전문 분야, 희망 근무 조건 등을 자유롭게 작성해주세요"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal('editModal')">취소</button>
+        <button class="btn-save" onclick="saveCoach()">등록하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" id="detailModalContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc,
+  query, orderBy, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCxEqm_YbMA_5j7CRRuYmowd4DHkIaB-DE",
+  authDomain: "matchcoach-799c8.firebaseapp.com",
+  projectId: "matchcoach-799c8",
+  storageBucket: "matchcoach-799c8.firebasestorage.app",
+  messagingSenderId: "510370641109",
+  appId: "1:510370641109:web:de97b3512121107f571e5c",
+  measurementId: "G-QS50NNEW6B"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+const provider = new GoogleAuthProvider();
+
+// ── 전역 상태 ──
+const SPORTS = [
+  { key:'jump',    label:'줄넘기',      emoji:'🪢', color:'#FF5C1A' },
+  { key:'badminton',label:'배드민턴',   emoji:'🏸', color:'#2563EB' },
+  { key:'climbing',label:'클라이밍',    emoji:'🧗', color:'#16A34A' },
+  { key:'dance',   label:'댄스',        emoji:'💃', color:'#9333EA' },
+  { key:'fitness', label:'피트니스',    emoji:'💪', color:'#DC2626' },
+  { key:'swimming',label:'수영',        emoji:'🏊', color:'#0891B2' },
+  { key:'tennis',  label:'테니스',      emoji:'🎾', color:'#CA8A04' },
+  { key:'taekwondo',label:'태권도',     emoji:'🥋', color:'#BE123C' },
+  { key:'yoga',    label:'요가/필라테스',emoji:'🧘', color:'#0D9488' },
+  { key:'etc',     label:'기타',        emoji:'⚡', color:'#64748B' },
+];
+const STATUS_MAP = {
+  available:{ label:'구직중', cls:'available' },
+  employed: { label:'재직중', cls:'employed'  },
+  seeking:  { label:'채용중', cls:'seeking'   },
+};
+
+let coaches = [];
+let currentUser = null;
+let editingId = null;
+let selectedSports = [];
+let filters = { status:'all', sport:'all', gender:'all' };
+let currentView = 'grid';
+let searchQuery = '';
+
+// ── Auth 상태 감지 ──
+onAuthStateChanged(auth, user => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('userAvatar').src = user.photoURL || '';
+    document.getElementById('userName').textContent = user.displayName?.split(' ')[0] || '';
+    loadCoaches();
+  } else {
+    currentUser = null;
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+});
+
+// ── 전역 함수 노출 ──
+window.signInWithGoogle = async () => {
+  try { await signInWithPopup(auth, provider); }
+  catch(e) { showToast('로그인 실패: ' + e.message); }
+};
+window.signOut = async () => {
+  await fbSignOut(auth);
+  showToast('로그아웃 되었습니다');
+};
+
+// ── Firestore CRUD ──
+async function loadCoaches() {
+  const q = query(collection(db, 'coaches'), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  coaches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderCards();
+  updateStats();
+}
+
+window.saveCoach = async () => {
+  const name = document.getElementById('f_name').value.trim();
+  const phone = document.getElementById('f_phone').value.trim();
+  if (!name || !phone) { showToast('이름과 연락처는 필수입니다'); return; }
+  if (selectedSports.length === 0) { showToast('종목을 하나 이상 선택해주세요'); return; }
+
+  const data = {
+    name, phone,
+    gender: document.getElementById('f_gender').value,
+    age: document.getElementById('f_age').value ? parseInt(document.getElementById('f_age').value) : null,
+    region: document.getElementById('f_region').value.trim(),
+    career: document.getElementById('f_career').value.trim(),
+    cert: document.getElementById('f_cert').value.trim(),
+    salary: document.getElementById('f_salary').value.trim(),
+    status: document.getElementById('f_status').value,
+    sns: document.getElementById('f_sns').value.trim(),
+    sports: [...selectedSports],
+    bio: document.getElementById('f_bio').value.trim(),
+    authorUid: currentUser.uid,
+    authorName: currentUser.displayName,
+    authorPhoto: currentUser.photoURL,
+  };
+
+  try {
+    if (editingId) {
+      await updateDoc(doc(db, 'coaches', editingId), { ...data, updatedAt: serverTimestamp() });
+      showToast('✅ 수정되었습니다');
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db, 'coaches'), data);
+      showToast('✅ 등록되었습니다');
+    }
+    closeModal('editModal');
+    await loadCoaches();
+  } catch(e) {
+    showToast('저장 실패: ' + e.message);
+  }
+};
+
+window.deleteCoach = async (id) => {
+  if (!confirm('이 글을 삭제하시겠습니까?')) return;
+  try {
+    await deleteDoc(doc(db, 'coaches', id));
+    showToast('🗑 삭제되었습니다');
+    closeModal('detailModal');
+    await loadCoaches();
+  } catch(e) {
+    showToast('삭제 실패: ' + e.message);
+  }
+};
+
+// ── 헬퍼 ──
+function getSport(key) { return SPORTS.find(s => s.key === key) || SPORTS[SPORTS.length-1]; }
+function getColor(sports) { return sports?.length ? getSport(sports[0]).color : '#64748B'; }
+function getInitial(name) { return name ? name.charAt(0) : '?'; }
+
+function updateStats() {
+  document.getElementById('totalCount').textContent = coaches.length;
+  document.getElementById('seekingCount').textContent = coaches.filter(c=>c.status==='available').length;
+  document.getElementById('hiringCount').textContent = coaches.filter(c=>c.status==='seeking').length;
+}
+
+// ── 렌더 ──
+function renderCards() {
+  const grid = document.getElementById('cardGrid');
+  const q = searchQuery.toLowerCase();
+  const filtered = coaches.filter(c => {
+    const matchStatus = filters.status === 'all' || c.status === filters.status;
+    const matchSport  = filters.sport  === 'all' || (c.sports||[]).includes(filters.sport);
+    const matchGender = filters.gender === 'all' || c.gender === filters.gender;
+    const matchSearch = !q || c.name?.includes(q) || c.region?.includes(q) ||
+      (c.sports||[]).some(s => getSport(s).label.includes(q)) || c.bio?.includes(q);
+    return matchStatus && matchSport && matchGender && matchSearch;
+  });
+
+  document.getElementById('filteredCount').textContent = filtered.length;
+  grid.className = 'grid-container' + (currentView === 'list' ? ' list-view' : '');
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="icon">🔍</div>
+      <h3>검색 결과가 없습니다</h3>
+      <p>다른 키워드나 필터를 사용해보세요</p>
+    </div>`;
+    return;
+  }
+
+  const isMine = c => c.authorUid === currentUser?.uid;
+
+  grid.innerHTML = filtered.map(c => {
+    const color = getColor(c.sports);
+    const st = STATUS_MAP[c.status] || STATUS_MAP.available;
+    const mine = isMine(c);
+    const tags = (c.sports||[]).map(s => {
+      const sp = getSport(s);
+      return `<span class="sport-tag" style="background:${sp.color}">${sp.emoji} ${sp.label}</span>`;
+    }).join('');
+    const avatarInner = c.authorPhoto
+      ? `<img src="${c.authorPhoto}" alt="">`
+      : getInitial(c.name);
+    const actions = mine
+      ? `<button class="btn-sm btn-edit" onclick="event.stopPropagation();openEdit('${c.id}')">수정</button>
+         <button class="btn-sm btn-contact" onclick="event.stopPropagation();contactCoach('${c.id}')">연락</button>
+         <button class="btn-sm btn-delete" onclick="event.stopPropagation();deleteCoach('${c.id}')">🗑</button>`
+      : `<button class="btn-sm btn-view-only" disabled>타인 글</button>
+         <button class="btn-sm btn-contact" onclick="event.stopPropagation();contactCoach('${c.id}')">연락하기</button>`;
+
+    if (currentView === 'list') {
+      return `<div class="card${mine?' is-mine':''}" style="border-left-color:${color}" onclick="openDetail('${c.id}')">
+        <div class="card-body">
+          <div class="card-top">
+            <div class="avatar" style="background:${color}">${avatarInner}</div>
+            <div class="card-meta">
+              <div class="card-name">${c.name}${mine?' <span style="font-size:11px;color:var(--orange)">내글</span>':''}</div>
+              <div class="card-sub"><span>${c.region||'-'}</span><span class="dot">·</span><span>${c.career||'-'} 경력</span><span class="dot">·</span><span>${c.age?c.age+'세':'-'}</span></div>
+            </div>
+          </div>
+          <div class="sports-tags">${tags}</div>
+          <div class="card-info-row">
+            <span class="status-badge ${st.cls}"><span class="status-dot"></span>${st.label}</span>
+            <span>${c.salary||'급여 협의'}</span>
+          </div>
+        </div>
+        <div class="card-actions" onclick="event.stopPropagation()">${actions}</div>
+      </div>`;
+    }
+
+    return `<div class="card${mine?' is-mine':''}" onclick="openDetail('${c.id}')">
+      ${mine?'<div class="card-mine-badge">내 글</div>':''}
+      <div class="card-sport-bar" style="background:linear-gradient(90deg,${color},${color}99)"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="avatar" style="background:${color}">${avatarInner}</div>
+          <div class="card-meta">
+            <div class="card-name">${c.name}</div>
+            <div class="card-sub"><span>${c.region||'-'}</span><span class="dot">·</span><span>${c.career||'-'}</span></div>
+          </div>
+          <span class="status-badge ${st.cls}"><span class="status-dot"></span>${st.label}</span>
+        </div>
+        <div class="sports-tags">${tags}</div>
+        <div class="card-info-row">
+          <span>📍 ${c.region||'-'}</span>
+          <span>💰 ${c.salary||'협의'}</span>
+        </div>
+      </div>
+      <div class="card-actions" onclick="event.stopPropagation()">${actions}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── 모달 ──
+window.openAddModal = () => {
+  editingId = null; selectedSports = [];
+  document.getElementById('modalTitle').textContent = '구인구직 등록';
+  ['name','phone','age','region','career','cert','salary','sns','bio'].forEach(f => {
+    const el = document.getElementById('f_'+f); if(el) el.value='';
+  });
+  document.getElementById('f_gender').value = '';
+  document.getElementById('f_status').value = 'available';
+  renderSportSelector();
+  document.getElementById('editModal').classList.add('open');
+};
+
+window.openEdit = (id) => {
+  const c = coaches.find(x=>x.id===id);
+  if(!c || c.authorUid !== currentUser?.uid) return;
+  editingId = id; selectedSports = [...(c.sports||[])];
+  document.getElementById('modalTitle').textContent = '글 수정';
+  document.getElementById('f_name').value = c.name||'';
+  document.getElementById('f_phone').value = c.phone||'';
+  document.getElementById('f_gender').value = c.gender||'';
+  document.getElementById('f_age').value = c.age||'';
+  document.getElementById('f_region').value = c.region||'';
+  document.getElementById('f_career').value = c.career||'';
+  document.getElementById('f_cert').value = c.cert||'';
+  document.getElementById('f_salary').value = c.salary||'';
+  document.getElementById('f_status').value = c.status||'available';
+  document.getElementById('f_sns').value = c.sns||'';
+  document.getElementById('f_bio').value = c.bio||'';
+  renderSportSelector();
+  document.getElementById('editModal').classList.add('open');
+  closeModal('detailModal');
+};
+
+window.openDetail = (id) => {
+  const c = coaches.find(x=>x.id===id);
+  if(!c) return;
+  const color = getColor(c.sports);
+  const st = STATUS_MAP[c.status]||STATUS_MAP.available;
+  const mine = c.authorUid === currentUser?.uid;
+  const tags = (c.sports||[]).map(s=>{const sp=getSport(s);return`<span class="sport-tag" style="background:${sp.color}">${sp.emoji} ${sp.label}</span>`;}).join('');
+  const avatarInner = c.authorPhoto ? `<img src="${c.authorPhoto}" alt="">` : getInitial(c.name);
+
+  document.getElementById('detailModalContent').innerHTML = `
+    <div class="detail-hero" style="background:linear-gradient(135deg,${color}33,var(--navy))">
+      <div class="detail-avatar" style="background:${color}">${avatarInner}</div>
+      <div>
+        <div class="detail-name">${c.name}${mine?' <span style="font-size:13px;color:var(--orange)">내 글</span>':''}</div>
+        <div class="detail-sub">${c.region||''} · ${c.career||'-'} 경력</div>
+        <div style="margin-top:8px"><span class="status-badge ${st.cls}"><span class="status-dot"></span>${st.label}</span></div>
+      </div>
+      <button class="btn-close" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.15);color:white" onclick="closeModal('detailModal')">✕</button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-section"><div class="detail-label">담당 종목</div><div class="sports-tags">${tags||'미입력'}</div></div>
+      <div class="detail-section">
+        <div class="detail-label">기본 정보</div>
+        <div class="detail-grid">
+          <div><div class="detail-label">연락처</div><div class="detail-value">${c.phone||'-'}</div></div>
+          <div><div class="detail-label">성별 / 나이</div><div class="detail-value">${c.gender||'-'} / ${c.age?c.age+'세':'-'}</div></div>
+          <div><div class="detail-label">자격증</div><div class="detail-value">${c.cert||'-'}</div></div>
+          <div><div class="detail-label">희망 급여</div><div class="detail-value">${c.salary||'협의'}</div></div>
+          <div><div class="detail-label">SNS</div><div class="detail-value">${c.sns||'-'}</div></div>
+          <div><div class="detail-label">작성자</div><div class="detail-value">${c.authorName||'-'}</div></div>
+        </div>
+      </div>
+      ${c.bio?`<div class="detail-section"><div class="detail-label">소개</div><div class="detail-text">${c.bio}</div></div>`:''}
+    </div>
+    <div class="detail-actions">
+      ${mine
+        ? `<button class="btn-sm btn-edit" style="padding:12px;font-size:14px;flex:1;border-radius:9px" onclick="openEdit('${c.id}')">✏️ 수정</button>
+           <button class="btn-sm btn-delete" style="padding:12px;font-size:14px;flex:1;max-width:none;border-radius:9px" onclick="deleteCoach('${c.id}')">🗑 삭제</button>`
+        : `<button class="btn-sm btn-contact" style="padding:12px;font-size:14px;flex:1;border-radius:9px" onclick="contactCoach('${c.id}')">📞 연락하기</button>`
+      }
+    </div>`;
+  document.getElementById('detailModal').classList.add('open');
+};
+
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+window.contactCoach = (id) => {
+  const c = coaches.find(x=>x.id===id);
+  if(c?.phone) window.open('tel:'+c.phone.replace(/-/g,''));
+};
+
+// ── 종목 선택기 ──
+function renderSportSelector() {
+  document.getElementById('sportSelector').innerHTML = SPORTS.map(s=>`
+    <button type="button" class="sport-option ${selectedSports.includes(s.key)?'selected':''}"
+      style="${selectedSports.includes(s.key)?`background:${s.color};border-color:${s.color}`:''}"
+      onclick="toggleSport('${s.key}','${s.color}')">
+      ${s.emoji} ${s.label}
+    </button>`).join('');
+}
+window.toggleSport = (key, color) => {
+  selectedSports = selectedSports.includes(key)
+    ? selectedSports.filter(s=>s!==key)
+    : [...selectedSports, key];
+  renderSportSelector();
+};
+
+// ── 필터 이벤트 ──
+document.querySelectorAll('.filter-chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const type = btn.dataset.type;
+    document.querySelectorAll(`.filter-chip[data-type="${type}"]`).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    filters[type] = btn.dataset.filter;
+    renderCards();
+  });
+});
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQuery = e.target.value; renderCards();
+});
+
+window.setView = (v) => {
+  currentView = v;
+  document.getElementById('gridViewBtn').classList.toggle('active', v==='grid');
+  document.getElementById('listViewBtn').classList.toggle('active', v==='list');
+  renderCards();
+};
+
+['editModal','detailModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if(e.target===this) closeModal(id);
+  });
+});
+
+window.showToast = (msg) => {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+};
+</script>
+</body>
+</html>
