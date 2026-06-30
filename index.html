@@ -42,15 +42,21 @@
   /* TOOLBAR */
   .toolbar{background:var(--navy-mid);border-bottom:1px solid var(--navy-light);}
   .toolbar-inner{max-width:1280px;margin:0 auto;padding:12px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
-  .search-box{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:var(--navy-light);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 14px;}
+  .search-box{flex:1;min-width:160px;display:flex;align-items:center;gap:8px;background:var(--navy-light);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 14px;}
   .search-box input{background:none;border:none;outline:none;color:white;font-size:14px;width:100%;font-family:'Noto Sans KR',sans-serif;}
   .search-box input::placeholder{color:var(--gray-500);}
   .btn-add{display:flex;align-items:center;gap:6px;background:var(--orange);color:white;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;}
   .btn-add:hover{background:var(--orange-soft);}
+  .btn-filter-toggle{display:none;align-items:center;gap:6px;background:var(--navy-light);color:white;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;}
+  .btn-filter-toggle .badge{background:var(--orange);color:white;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;min-width:16px;text-align:center;}
 
   /* FILTERS */
   .filter-section{background:var(--navy-mid);border-bottom:1px solid var(--navy-light);}
   .filter-inner{max-width:1280px;margin:0 auto;padding:10px 24px;display:flex;flex-direction:column;gap:8px;}
+  .filter-inner.collapsed{display:none;}
+  @media(min-width:641px){
+    .filter-inner.collapsed{display:flex;}
+  }
   .filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .filter-label{font-size:11px;color:var(--orange);font-weight:700;letter-spacing:0.5px;min-width:52px;flex-shrink:0;}
   .filter-chip{padding:5px 13px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--gray-300);font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.15s;}
@@ -180,6 +186,9 @@
     .detail-grid{grid-template-columns:1fr;}
     .grid-container,.view-controls{padding-left:12px;padding-right:12px;}
     .filter-inner{padding:10px 12px;}
+    .btn-filter-toggle{display:flex;}
+    .region-selects{flex-direction:column;align-items:stretch;}
+    .region-select,.btn-reset{width:100%;}
   }
 </style>
 </head>
@@ -228,6 +237,10 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A8580" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input type="text" id="searchInput" placeholder="이름, 종목, 지역으로 검색...">
       </div>
+      <button class="btn-filter-toggle" onclick="toggleFilters()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        필터 <span class="badge" id="filterBadge" style="display:none">0</span>
+      </button>
       <button class="btn-add" onclick="openAddModal()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
         글 올리기
@@ -236,7 +249,7 @@
   </div>
 
   <div class="filter-section">
-    <div class="filter-inner">
+    <div class="filter-inner collapsed" id="filterInner">
       <div class="filter-row">
         <span class="filter-label">상태</span>
         <button class="filter-chip active" data-type="status" data-filter="all">전체</button>
@@ -737,6 +750,7 @@ window.onFSidoChange = () => {
   dong.innerHTML = '<option value="">동/읍/면 전체</option>';
   filterRegion = {sido, sigungu:'', dong:''};
   if (sido && REGIONS[sido]) Object.keys(REGIONS[sido]).forEach(s=>sg.innerHTML+=`<option value="${s}">${s}</option>`);
+  updateFilterBadge();
   renderCards();
 };
 window.onFSigunguChange = () => {
@@ -748,12 +762,13 @@ window.onFSigunguChange = () => {
   if (sido && sigungu && REGIONS[sido]?.[sigungu]) REGIONS[sido][sigungu].forEach(d=>dong.innerHTML+=`<option value="${d}">${d}</option>`);
   renderCards();
 };
-document.getElementById('fDong').addEventListener('change', e => { filterRegion.dong = e.target.value; renderCards(); });
+document.getElementById('fDong').addEventListener('change', e => { filterRegion.dong = e.target.value; updateFilterBadge(); renderCards(); });
 window.resetRegion = () => {
   document.getElementById('fSido').value='';
   document.getElementById('fSigungu').innerHTML='<option value="">시/군/구 전체</option>';
   document.getElementById('fDong').innerHTML='<option value="">동/읍/면 전체</option>';
   filterRegion={sido:'',sigungu:'',dong:''};
+  updateFilterBadge();
   renderCards();
 };
 
@@ -799,6 +814,7 @@ document.querySelectorAll('.filter-chip').forEach(btn => {
     document.querySelectorAll(`.filter-chip[data-type="${type}"]`).forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     filters[type] = btn.dataset.filter;
+    updateFilterBadge();
     renderCards();
   });
 });
@@ -809,6 +825,22 @@ window.setView = (v) => {
   document.getElementById('listBtn').classList.toggle('active',v==='list');
   renderCards();
 };
+
+window.toggleFilters = () => {
+  document.getElementById('filterInner').classList.toggle('collapsed');
+};
+
+function updateFilterBadge() {
+  let count = 0;
+  if (filters.status !== 'all') count++;
+  if (filters.category !== 'all') count++;
+  if (filters.age !== 'all') count++;
+  if (filters.gender !== 'all') count++;
+  if (filterRegion.sido) count++;
+  const badge = document.getElementById('filterBadge');
+  if (count > 0) { badge.textContent = count; badge.style.display = 'inline-block'; }
+  else { badge.style.display = 'none'; }
+}
 ['editModal','detailModal'].forEach(id => {
   document.getElementById(id).addEventListener('click', function(e){ if(e.target===this) closeModal(id); });
 });
