@@ -634,7 +634,7 @@ function render(){
         <div><span class="badge ${st.cls}"><span class="bdot"></span>${st.label}</span></div>
         <div class="cell-sports">${sportHtml}</div>
         <div class="cell-region">📍 ${regionLabel}</div>
-        <div class="cell-action" onclick="event.stopPropagation()">${actions}</div>
+        <div class="cell-action">${isMine ? '' : `<span onclick="event.stopPropagation()">${actions}</span>`}</div>
       </div>`;
     }).join('');
     el.innerHTML=`<div class="tbl-wrap">
