@@ -596,7 +596,18 @@ function render(){
       const reportCnt=c.reportCount||0;
       const blinded=c.blinded||false;
       const actions=isMine
-        ?`<button class="btn-renew" onclick="event.stopPropagation();renewPost('${c.id}')">갱신</button><button class="btn-edit-s" onclick="event.stopPropagation();openEdit('${c.id}')">수정</button><button class="btn-del-s" onclick="event.stopPropagation();deleteCoach('${c.id}')">삭제</button>`
+        ?`<div class="action-dropdown" onclick="event.stopPropagation()">
+            <button class="btn-more" onclick="toggleDropdown('dd_${c.id}')">⋯</button>
+            <div class="dropdown-menu" id="dd_${c.id}" style="display:none;">
+              <button onclick="renewPost('${c.id}');closeDropdown('dd_${c.id}')">🔄 갱신하기</button>
+              <button onclick="openEdit('${c.id}');closeDropdown('dd_${c.id}')">✏️ 수정하기</button>
+              <div class="divider"></div>
+              <button class="danger" onclick="deleteCoach('${c.id}');closeDropdown('dd_${c.id}')">🗑 삭제</button>
+            </div>
+          </div>`
+        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded&&!isMine?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="신고" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:12px;">🚩</button>`:''}`;
+      // 아래 라인 무시 (위에서 이미 actions 완성)
+      const _dummy=`button>`
         :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded&&!isMine?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="신고">🚩</button>`:''}`;
       const bg=idx%2===0?'background:white;':'background:#FAFAFA;';
       const rowCls=`tbl-row${isMine?' mine':''}${blinded?' blinded':''}${old?' old-post':''}`;
@@ -1019,6 +1030,24 @@ window.selectType=status=>{
   }
   openAddModal(status);
 };
+
+
+window.toggleDropdown=id=>{
+  // 다른 드롭다운 모두 닫기
+  document.querySelectorAll('.dropdown-menu').forEach(el=>{
+    if(el.id!==id) el.style.display='none';
+  });
+  const el=document.getElementById(id);
+  if(el) el.style.display=el.style.display==='none'?'block':'none';
+};
+window.closeDropdown=id=>{
+  const el=document.getElementById(id);
+  if(el) el.style.display='none';
+};
+// 외부 클릭시 드롭다운 닫기
+document.addEventListener('click',()=>{
+  document.querySelectorAll('.dropdown-menu').forEach(el=>el.style.display='none');
+});
 
 window.showToast=msg=>{
   const t=document.getElementById('toast');
