@@ -226,7 +226,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
         <select class="r-sel" id="fDong"><option value="">동/읍/면</option></select>
         <button onclick="resetRegion()" style="font-size:11px;padding:7px 10px;border-radius:7px;border:1px solid #E5E7EB;background:white;color:#6B7280;cursor:pointer;">초기화</button>
       </div>
-      <button class="btn-add" onclick="openAddModal()">
+      <button class="btn-add" onclick="openTypeModal()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
         글 올리기
       </button>
@@ -282,11 +282,56 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
   </div>
 </div>
 
+
+<!-- TYPE SELECT MODAL -->
+<div class="mo" id="typeModal">
+  <div class="mo-box" style="max-width:400px;">
+    <div class="mo-head">
+      <div class="mo-title">어떤 글을 올릴까요?</div>
+      <button class="mo-close" onclick="closeModal('typeModal')">✕</button>
+    </div>
+    <div class="mo-body" style="padding:24px;">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <button onclick="selectType('available')" style="
+          display:flex;align-items:center;gap:16px;
+          padding:20px;border-radius:12px;
+          border:2px solid #E5E7EB;background:white;
+          cursor:pointer;text-align:left;
+          font-family:'Noto Sans KR',sans-serif;
+          transition:all 0.15s;
+        " onmouseover="this.style.borderColor='#0062FF';this.style.background='#EFF6FF'"
+           onmouseout="this.style.borderColor='#E5E7EB';this.style.background='white'">
+          <div style="width:44px;height:44px;border-radius:10px;background:#DCFCE7;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🙋</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:4px;">구직중</div>
+            <div style="font-size:12px;color:#6B7280;">일자리를 찾고 있어요.<br>채용을 원하는 센터나 학부모가 연락할 수 있어요.</div>
+          </div>
+        </button>
+        <button onclick="selectType('seeking')" style="
+          display:flex;align-items:center;gap:16px;
+          padding:20px;border-radius:12px;
+          border:2px solid #E5E7EB;background:white;
+          cursor:pointer;text-align:left;
+          font-family:'Noto Sans KR',sans-serif;
+          transition:all 0.15s;
+        " onmouseover="this.style.borderColor='#0062FF';this.style.background='#EFF6FF'"
+           onmouseout="this.style.borderColor='#E5E7EB';this.style.background='white'">
+          <div style="width:44px;height:44px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🏫</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:4px;">채용중</div>
+            <div style="font-size:12px;color:#6B7280;">강사를 찾고 있어요.<br>구직 중인 강사가 연락할 수 있어요.</div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT MODAL -->
 <div class="mo" id="editModal">
   <div class="mo-box">
     <div class="mo-head">
-      <div class="mo-title" id="modalTitle">구인구직 등록</div>
+      <div style="display:flex;align-items:center;gap:10px;"><div class="mo-title" id="modalTitle">구인구직 등록</div><span id="modalStatusBadge" style="font-size:12px;padding:3px 10px;border-radius:20px;font-weight:600;"></span></div>
       <button class="mo-close" onclick="closeModal('editModal')">✕</button>
     </div>
     <div class="mo-body">
@@ -297,7 +342,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
         </div>
         <div class="fg"><label>나이</label><input type="number" id="f_age" placeholder="28" min="18" max="80"></div>
         <div class="fg"><label>경력</label><input type="text" id="f_career" placeholder="5년"></div>
-        <div class="fg"><label>상태 *</label>
+        <div class="fg" id="statusField" style="display:none;"><label>상태 *</label>
           <select id="f_status">
             <option value="available">구직중 (일자리 찾는 중)</option>
             <option value="seeking">채용중 (강사 모집 중)</option>
@@ -606,9 +651,17 @@ window.setView=v=>{
   render();
 };
 
-window.openAddModal=()=>{
+window.openAddModal=(preStatus)=>{
   editingId=null; sportTags=[]; regionList=[];
-  document.getElementById('modalTitle').textContent='구인구직 등록';
+  const statusLabel = preStatus==='seeking' ? '채용중' : '구직중';
+  const statusColor = preStatus==='seeking' ? '#EFF6FF' : '#DCFCE7';
+  const statusTextColor = preStatus==='seeking' ? '#1D4ED8' : '#15803D';
+  document.getElementById('modalTitle').textContent = preStatus==='seeking' ? '채용 글 등록' : '구직 글 등록';
+  const badge = document.getElementById('modalStatusBadge');
+  badge.textContent = statusLabel;
+  badge.style.background = statusColor;
+  badge.style.color = statusTextColor;
+  document.getElementById('f_status').value = preStatus || 'available';
   ['f_name','f_age','f_career','f_cert','f_salary','f_bio','f_contact_val'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('f_gender').value='';
   document.getElementById('f_status').value='available';
@@ -643,15 +696,7 @@ window.saveCoach=async()=>{
   const name=document.getElementById('f_name').value.trim();
   const contactVal=document.getElementById('f_contact_val').value.trim();
   if(!name){showToast('이름 또는 닉네임은 필수입니다');return;}
-  // 한 계정당 구인1 + 구직1 제한
-  if(!editingId) {
-    const newStatus = document.getElementById('f_status').value;
-    const myPosts = coaches.filter(c => c.authorUid === currentUser.uid && c.status === newStatus);
-    if(myPosts.length > 0) {
-      showToast(newStatus === 'available' ? '구직 글은 1개만 등록 가능해요. 기존 글을 수정해주세요.' : '채용 글은 1개만 등록 가능해요. 기존 글을 수정해주세요.');
-      return;
-    }
-  }
+
   if(!contactVal){showToast('연락 방법을 입력해주세요');return;}
   if(sportTags.length===0){showToast('지도 종목을 입력해주세요');return;}
   if(regionList.length===0){showToast('출강 가능 지역을 추가해주세요');return;}
@@ -957,6 +1002,22 @@ window.adminDelete=async id=>{
   showToast('🗑 글이 삭제됐습니다');
   await loadCoaches();
   renderAdmin();
+};
+
+
+window.openTypeModal=()=>{
+  document.getElementById('typeModal').classList.add('on');
+};
+
+window.selectType=status=>{
+  closeModal('typeModal');
+  // 한 계정당 1글 제한 미리 체크
+  const myPosts=coaches.filter(c=>c.authorUid===currentUser?.uid&&c.status===status);
+  if(myPosts.length>0){
+    showToast(status==='available'?'구직 글은 1개만 등록 가능해요. 내 글 관리에서 수정해주세요.':'채용 글은 1개만 등록 가능해요. 내 글 관리에서 수정해주세요.');
+    return;
+  }
+  openAddModal(status);
 };
 
 window.showToast=msg=>{
