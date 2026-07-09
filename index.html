@@ -261,6 +261,11 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
     </div>
 
     <div class="main">
+      <div class="tab-bar">
+        <button class="tab-btn on" id="tab_all" onclick="switchTab('all')">전체 글</button>
+        <button class="tab-btn" id="tab_mine" onclick="switchTab('mine')">내 글 관리</button>
+        <button class="tab-btn" id="tab_admin" onclick="switchTab('admin')" id="adminTab" style="display:none">🛡 관리자</button>
+      </div>
       <div class="main-header">
         <div class="result-txt"><strong id="filteredCount">0</strong>명 표시 중</div>
         <div class="view-btns">
@@ -368,7 +373,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc,
-  query, orderBy, serverTimestamp }
+  query, orderBy, serverTimestamp, increment, where, getDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const fbConfig = {
@@ -389,13 +394,14 @@ document.getElementById('loginLogo').src = LOGO;
 document.getElementById('headerLogo').src = LOGO;
 
 const MAIN_SPORTS = ['축구','농구','줄넘기','배드민턴','클라이밍','댄스','피트니스','수영','테니스','태권도','복싱','아크로바틱','요가','필라테스'];
+const ADMIN_UID = 'd7QYShvsv9WihlczimfuIndo41s2';
 const CONTACT_LABELS = {kakao:'카카오 오픈채팅',insta:'인스타그램',email:'이메일',phone:'전화번호',other:'링크'};
 const STATUS_MAP = {available:{label:'구직중',cls:'seek'},seeking:{label:'채용중',cls:'hire'}};
 const CAT_COLORS = {'구기':'#1D4ED8','무용·댄스':'#7C3AED','격투·무술':'#B91C1C','수상':'#0E7490','건강·피트니스':'#15803D','기타':'#6B7280'};
 
 const REGIONS = {"서울특별시":{"강남구":["개포동","논현동","대치동","도곡동","삼성동","신사동","압구정동","역삼동","청담동"],"강동구":["강일동","고덕동","길동","둔촌동","명일동","상일동","성내동","암사동","천호동"],"강북구":["번동","수유동","우이동","미아동"],"강서구":["가양동","등촌동","마곡동","방화동","염창동","화곡동"],"관악구":["남현동","봉천동","신림동"],"광진구":["광장동","구의동","군자동","능동","자양동","중곡동","화양동"],"구로구":["가리봉동","개봉동","고척동","구로동","신도림동","오류동"],"금천구":["가산동","독산동","시흥동"],"노원구":["공릉동","상계동","월계동","중계동","하계동"],"도봉구":["도봉동","방학동","쌍문동","창동"],"동대문구":["답십리동","신설동","이문동","전농동","제기동","청량리동","회기동","휘경동"],"동작구":["노량진동","대방동","동작동","사당동","상도동","신대방동"],"마포구":["공덕동","대흥동","망원동","상수동","서교동","성산동","아현동","합정동"],"서대문구":["남가좌동","북가좌동","신촌동","연희동","홍은동","홍제동"],"서초구":["내곡동","반포동","방배동","서초동","양재동","잠원동"],"성동구":["금호동","마장동","성수동","옥수동","왕십리동","행당동"],"성북구":["길음동","돈암동","보문동","석관동","성북동","안암동","장위동","종암동"],"송파구":["가락동","거여동","마천동","문정동","방이동","삼전동","석촌동","송파동","신천동","오금동","위례동","잠실동","장지동","풍납동"],"양천구":["목동","신정동","신월동"],"영등포구":["당산동","대림동","도림동","문래동","신길동","여의도동","영등포동"],"용산구":["동빙고동","보광동","서빙고동","이촌동","이태원동","청파동","한강로동","한남동"],"은평구":["갈현동","구산동","녹번동","불광동","수색동","응암동"],"종로구":["가회동","계동","부암동","사직동","삼청동","청운동","평창동","혜화동"],"중구":["광희동","명동","신당동","을지로","장충동","충무로"],"중랑구":["면목동","묵동","상봉동","신내동","중화동"]},"부산광역시":{"강서구":["가락동","대저동","명지동"],"금정구":["구서동","남산동","노포동","부곡동","장전동"],"기장군":["기장읍","장안읍","정관읍","일광읍"],"남구":["감만동","대연동","문현동","용호동","우암동"],"동구":["범일동","수정동","좌천동","초량동"],"동래구":["낙민동","명륜동","명장동","복천동","사직동","안락동","온천동"],"부산진구":["개금동","당감동","범전동","부전동","양정동"],"북구":["구포동","금곡동","덕천동","만덕동","화명동"],"사하구":["감천동","괴정동","다대동","당리동","신평동","장림동","하단동"],"수영구":["광안동","남천동","민락동","수영동","망미동"],"연제구":["거제동","연산동"],"해운대구":["반송동","반여동","송정동","우동","재송동","좌동","중동"]},"인천광역시":{"계양구":["계산동","박촌동","임학동"],"남동구":["간석동","구월동","만수동"],"미추홀구":["관교동","도화동","숭의동","주안동"],"부평구":["부개동","부평동","산곡동","삼산동"],"서구":["가좌동","검단동","검암경서동","석남동","청라동"],"연수구":["동춘동","송도동","연수동"]},"대구광역시":{"달서구":["감삼동","두류동","상인동","월성동","이곡동","진천동"],"동구":["각산동","불로봉무동","신암동","신서동"],"북구":["검단동","구암동","국우동","노원동","태전동"],"수성구":["고산동","만촌동","범물동","범어동","수성동","시지동","황금동"],"중구":["공평동","남산동","대봉동","삼덕동"]},"광주광역시":{"광산구":["도산동","비아동","산정동","수완동","신가동","신창동"],"남구":["방림동","백운동","봉선동","사직동","월산동"],"동구":["계림동","동명동","운림동","학동"],"북구":["각화동","금곡동","두암동","문흥동","용봉동","운암동","일곡동"],"서구":["금호동","농성동","동천동","마륵동","화정동"]},"대전광역시":{"대덕구":["법동","신탄진동","중리동"],"동구":["가양동","대동","성남동","인동","판암동"],"서구":["가수원동","갈마동","관저동","둔산동","월평동"],"유성구":["관평동","노은동","반석동","봉명동","전민동","지족동"],"중구":["대흥동","목동","문화동","태평동"]},"경기도":{"고양시 덕양구":["강매동","고양동","능곡동","행신동","화전동"],"고양시 일산동구":["마두동","백석동","식사동","장항동","중산동","풍동"],"고양시 일산서구":["구산동","대화동","덕이동","주엽동","탄현동"],"성남시 분당구":["구미동","대장동","백현동","분당동","삼평동","서현동","수내동","야탑동","운중동","이매동","정자동","판교동"],"성남시 수정구":["복정동","수진동","신흥동","위례동"],"성남시 중원구":["금광동","상대원동","은행동"],"수원시 권선구":["고색동","구운동","권선동","세류동","호매실동"],"수원시 영통구":["광교동","매탄동","영통동","이의동"],"수원시 장안구":["연무동","정자동","조원동","천천동"],"수원시 팔달구":["교동","남수동","인계동","지동","화서동"],"용인시 기흥구":["공세동","구갈동","동백동","마북동","보정동","신갈동","영덕동"],"용인시 수지구":["고기동","동천동","상현동","신봉동","풍덕천동"],"화성시":["남양읍","동탄면","봉담읍","향남읍"],"남양주시":["가운동","금곡동","다산동","별내동","오남읍","와부읍","진접읍","퇴계원읍","평내동","호평동"],"부천시":["고강동","상동","소사동","송내동","심곡동","원미동","중동"],"안산시 단원구":["고잔동","선감동","와동","원곡동"],"안산시 상록구":["본오동","사사동","수암동","월피동"],"안양시 동안구":["갈산동","관양동","비산동","호계동"],"안양시 만안구":["박달동","안양동","석수동"],"시흥시":["거모동","군자동","능곡동","대야동","배곧동","정왕동"],"파주시":["교하동","금촌동","문산읍","운정동"],"평택시":["고덕동","서정동","안중읍","포승읍"],"김포시":["걸포동","사우동","양촌읍","풍무동"],"의정부시":["가능동","금오동","녹양동","민락동","신곡동"],"하남시":["덕풍동","미사동","신장동"]},"강원도":{"강릉시":["강동면","교동","남문동","노암동","주문진읍","중앙동"],"춘천시":["강남동","교동","동면","사농동","석사동","약사동","온의동","우두동","퇴계동","효자동"],"원주시":["관설동","단계동","단구동","무실동","반곡동","봉산동","우산동","태장동"],"속초시":["대포동","동명동","영랑동","조양동","중앙동"]},"충청북도":{"청주시 상당구":["가덕면","낭성면","미원면","사천동","중앙동"],"청주시 서원구":["개신동","궁동","모충동","사직동","수곡동","분평동"],"청주시 청원구":["내덕동","오창읍","우암동"],"청주시 흥덕구":["가경동","강서동","봉명동","복대동","산남동","오송읍"],"충주시":["교현동","달천동","성내동","칠금동"]},"충청남도":{"천안시 동남구":["동면","병천면","성남면"],"천안시 서북구":["입장면","직산읍","성환읍"],"아산시":["배방읍","온양동"],"공주시":["반포면","유구읍"],"당진시":["당진시","송악읍","합덕읍"]},"전라북도":{"전주시 덕진구":["덕진동","금암동","송천동","우아동","인후동","팔복동"],"전주시 완산구":["경원동","교동","다가동","삼천동","중화산동","풍남동","평화동"],"군산시":["미성동","소룡동","조촌동"],"익산시":["신동","익산동","인화동"]},"전라남도":{"광양시":["광양읍","중마동","황금동"],"목포시":["경동","달동","삼학동","신흥동","옥암동"],"순천시":["승주읍"],"여수시":["돌산읍"]},"경상북도":{"경산시":["남천면","압량읍","진량읍","하양읍"],"경주시":["강동면","건천읍","안강읍"],"구미시":["고아읍","선산읍"],"포항시 남구":["구룡포읍","오천읍"],"포항시 북구":["흥해읍"],"안동시":["안동동","풍산읍"]},"경상남도":{"창원시 성산구":["남산동","성주동"],"창원시 의창구":["동읍","북면"],"김해시":["장유동","진영읍"],"양산시":["물금읍","웅상읍"],"진주시":["상대동"],"거제시":["고현동"]},"제주특별자치도":{"제주시":["건입동","노형동","봉개동","삼도동","삼양동","애월읍","연동","외도동","용담동","이도동","이호동","일도동","조천읍","한경면","한림읍","화북동"],"서귀포시":["강정동","남원읍","대정읍","동홍동","서귀동","성산읍","표선면"]}};
 
-let coaches=[], currentUser=null, editingId=null, sportTags=[], regionList=[], currentView='list', searchQuery='';
+let coaches=[], currentUser=null, editingId=null, sportTags=[], regionList=[], currentView='list', searchQuery='', currentTab='all';
 let filterRegion={sido:'',sigungu:'',dong:''};
 
 onAuthStateChanged(auth, user=>{
@@ -408,6 +414,10 @@ onAuthStateChanged(auth, user=>{
     initRegionSelects();
     buildSportFilters();
     loadCoaches();
+    // 관리자 탭 표시
+    if(user.uid === ADMIN_UID) {
+      document.getElementById('adminTab').style.display = 'block';
+    }
   } else {
     currentUser=null;
     document.getElementById('loginScreen').style.display='flex';
@@ -445,6 +455,24 @@ function buildSportFilters(){
 function getChecked(id){return document.getElementById(id)?.checked;}
 function getAgeGroup(age){if(!age)return null;if(age<30)return'20';if(age<40)return'30';if(age<50)return'40';return'50';}
 
+function formatDate(ts){
+  if(!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts.seconds*1000);
+  const now = new Date();
+  const diff = Math.floor((now - d) / (1000*60*60*24));
+  if(diff === 0) return '오늘';
+  if(diff === 1) return '어제';
+  if(diff < 7) return diff+'일 전';
+  if(diff < 30) return Math.floor(diff/7)+'주 전';
+  return Math.floor(diff/30)+'달 전';
+}
+
+function isOldPost(ts){
+  if(!ts) return false;
+  const d = ts.toDate ? ts.toDate() : new Date(ts.seconds*1000);
+  return (new Date() - d) > 30*24*60*60*1000;
+}
+
 function renderRegionLabel(regions){
   if(!regions||!regions.length)return'-';
   if(regions.length===1)return regions[0];
@@ -472,6 +500,8 @@ function getFiltered(){
   const {sido,sigungu,dong}=filterRegion;
 
   return coaches.filter(c=>{
+    // 블라인드 글은 관리자와 작성자만 볼 수 있음
+    if(c.blinded && currentUser?.uid!==ADMIN_UID && c.authorUid!==currentUser?.uid) return false;
     if(statusOn.length&&!statusOn.includes(c.status))return false;
     if(genderOn.length&&!genderOn.includes(c.gender))return false;
     if(ageOn.length&&!ageOn.includes(getAgeGroup(c.age)))return false;
@@ -497,7 +527,9 @@ function getFiltered(){
 }
 
 function render(){
-  const filtered=getFiltered();
+  if(currentTab==='admin'){renderAdmin();return;}
+  let filtered=getFiltered();
+  if(currentTab==='mine') filtered=filtered.filter(c=>c.authorUid===currentUser?.uid);
   document.getElementById('filteredCount').textContent=filtered.length;
   const el=document.getElementById('mainContent');
   if(!filtered.length){
@@ -508,27 +540,34 @@ function render(){
     const rows=filtered.map((c,idx)=>{
       const st=STATUS_MAP[c.status]||STATUS_MAP.available;
       const isMine=c.authorUid===currentUser?.uid;
+      const isAdmin=currentUser?.uid===ADMIN_UID;
       const color=CAT_COLORS[c.category]||'#7C3AED';
       const avInner=c.authorPhoto?`<img src="${c.authorPhoto}" alt="">`:(c.name||'?').charAt(0);
       const max=3; const vis=(c.sports||[]).slice(0,max); const extra=(c.sports||[]).length-max;
       const sportHtml=vis.map(s=>`<span class="s-tag">#${s}</span>`).join('')+(extra>0?`<span class="s-more">+${extra}</span>`:'');
       const regionLabel=renderRegionLabel(c.regions||[]);
+      const dateStr=formatDate(c.createdAt);
+      const old=isOldPost(c.createdAt);
+      const reportCnt=c.reportCount||0;
+      const blinded=c.blinded||false;
       const actions=isMine
-        ?`<button class="btn-edit-s" onclick="event.stopPropagation();openEdit('${c.id}')">수정</button><button class="btn-del-s" onclick="event.stopPropagation();deleteCoach('${c.id}')">삭제</button>`
-        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>`;
+        ?`<button class="btn-renew" onclick="event.stopPropagation();renewPost('${c.id}')">갱신</button><button class="btn-edit-s" onclick="event.stopPropagation();openEdit('${c.id}')">수정</button><button class="btn-del-s" onclick="event.stopPropagation();deleteCoach('${c.id}')">삭제</button>`
+        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded&&!isMine?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="신고">🚩</button>`:''}`;
       const bg=idx%2===0?'background:white;':'background:#FAFAFA;';
-      return `<div class="tbl-row${isMine?' mine':''}" style="${bg}" onclick="openDetail('${c.id}')">
+      const rowCls=`tbl-row${isMine?' mine':''}${blinded?' blinded':''}${old?' old-post':''}`;
+      return `<div class="${rowCls}" style="${bg}" onclick="openDetail('${c.id}')">
         <div class="cell-profile">
           <div class="av" style="background:${color}">${avInner}</div>
           <div style="min-width:0;">
-            <div class="name-txt">${c.name}${isMine?'<span style="font-size:9px;color:#0062FF;margin-left:4px;">내글</span>':''}</div>
+            <div class="name-txt">${c.name}${isMine?'<span style="font-size:9px;color:#0062FF;margin-left:4px;">내글</span>':''}${old?'<span style="font-size:9px;color:#F59E0B;margin-left:4px;">⚠️오래된글</span>':''}</div>
             <div class="sub-txt">${c.gender||'-'} · ${c.age?c.age+'세':'-'} · ${c.career||'-'}</div>
+            <div class="date-txt">${dateStr} · 👁 ${c.viewCount||0}</div>
           </div>
         </div>
         <div><span class="badge ${st.cls}"><span class="bdot"></span>${st.label}</span></div>
         <div class="cell-sports">${sportHtml}</div>
         <div class="cell-region">📍 ${regionLabel}</div>
-        <div class="cell-action">${actions}</div>
+        <div class="cell-action" onclick="event.stopPropagation()">${actions}</div>
       </div>`;
     }).join('');
     el.innerHTML=`<div class="tbl-wrap">
@@ -604,6 +643,15 @@ window.saveCoach=async()=>{
   const name=document.getElementById('f_name').value.trim();
   const contactVal=document.getElementById('f_contact_val').value.trim();
   if(!name){showToast('이름 또는 닉네임은 필수입니다');return;}
+  // 한 계정당 구인1 + 구직1 제한
+  if(!editingId) {
+    const newStatus = document.getElementById('f_status').value;
+    const myPosts = coaches.filter(c => c.authorUid === currentUser.uid && c.status === newStatus);
+    if(myPosts.length > 0) {
+      showToast(newStatus === 'available' ? '구직 글은 1개만 등록 가능해요. 기존 글을 수정해주세요.' : '채용 글은 1개만 등록 가능해요. 기존 글을 수정해주세요.');
+      return;
+    }
+  }
   if(!contactVal){showToast('연락 방법을 입력해주세요');return;}
   if(sportTags.length===0){showToast('지도 종목을 입력해주세요');return;}
   if(regionList.length===0){showToast('출강 가능 지역을 추가해주세요');return;}
@@ -645,9 +693,16 @@ window.openContact=id=>{
   else if(c.contactVal){window.open(c.contactVal.startsWith('http')?c.contactVal:'https://'+c.contactVal,'_blank');}
 };
 
-window.openDetail=id=>{
+window.openDetail=async id=>{
   const c=coaches.find(x=>x.id===id);
   if(!c)return;
+  // 조회수 증가 (본인 글 제외)
+  if(c.authorUid !== currentUser?.uid){
+    try{
+      await updateDoc(doc(db,'coaches',id),{viewCount:increment(1)});
+      c.viewCount=(c.viewCount||0)+1;
+    }catch(e){}
+  }
   const st=STATUS_MAP[c.status]||STATUS_MAP.available;
   const isMine=c.authorUid===currentUser?.uid;
   const color=CAT_COLORS[c.category]||'#7C3AED';
@@ -683,7 +738,8 @@ window.openDetail=id=>{
       ${isMine
         ?`<button class="btn-edit-s" style="flex:1;padding:11px;font-size:14px;border-radius:9px;" onclick="openEdit('${c.id}')">✏️ 수정</button>
           <button class="btn-del-s" style="flex:1;padding:11px;font-size:14px;border-radius:9px;" onclick="deleteCoach('${c.id}')">🗑 삭제</button>`
-        :`<button class="btn-contact" style="flex:1;padding:11px;font-size:14px;border-radius:9px;" onclick="openContact('${c.id}')">📞 연락하기</button>`
+        :`<button class="btn-contact" style="flex:2;padding:11px;font-size:14px;border-radius:9px;" onclick="openContact('${c.id}')">📞 연락하기</button>
+          <button class="btn-report" style="padding:11px 14px;border-radius:9px;font-size:13px;" onclick="reportPost('${c.id}')" title="신고">🚩 신고</button>`
       }
     </div>`;
   document.getElementById('detailModal').classList.add('on');
@@ -799,6 +855,109 @@ document.getElementById('searchInput').addEventListener('input',e=>{searchQuery=
 ['editModal','detailModal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal(id);});
 });
+
+
+// ── 신고 ──
+window.reportPost=async id=>{
+  const c=coaches.find(x=>x.id===id);
+  if(!c||c.authorUid===currentUser?.uid){showToast('본인 글은 신고할 수 없어요');return;}
+  if(!confirm('이 글을 신고하시겠습니까?\n허위 또는 부적절한 글만 신고해주세요.')){return;}
+  try{
+    const myReports=JSON.parse(localStorage.getItem('reported')||'[]');
+    if(myReports.includes(id)){showToast('이미 신고한 글이에요');return;}
+    const newCnt=(c.reportCount||0)+1;
+    const shouldBlind=newCnt>=3;
+    await updateDoc(doc(db,'coaches',id),{
+      reportCount:increment(1),
+      blinded:shouldBlind
+    });
+    myReports.push(id);
+    localStorage.setItem('reported',JSON.stringify(myReports));
+    c.reportCount=newCnt;
+    if(shouldBlind){c.blinded=true;}
+    showToast(shouldBlind?'신고 3회 누적으로 블라인드 처리됐습니다':'신고가 접수됐습니다');
+    render();
+    closeModal('detailModal');
+  }catch(e){showToast('신고 실패: '+e.message);}
+};
+
+// ── 갱신 (30일 리셋) ──
+window.renewPost=async id=>{
+  const c=coaches.find(x=>x.id===id);
+  if(!c||c.authorUid!==currentUser?.uid)return;
+  try{
+    await updateDoc(doc(db,'coaches',id),{createdAt:serverTimestamp()});
+    showToast('✅ 글이 갱신됐습니다');
+    await loadCoaches();
+  }catch(e){showToast('갱신 실패');}
+};
+
+// ── 탭 전환 ──
+window.switchTab=tab=>{
+  currentTab=tab;
+  ['all','mine','admin'].forEach(t=>{
+    const el=document.getElementById('tab_'+t);
+    if(el) el.classList.toggle('on',t===tab);
+  });
+  if(tab==='admin'){renderAdmin();}
+  else{render();}
+};
+
+// ── 관리자 페이지 ──
+async function renderAdmin(){
+  if(currentUser?.uid!==ADMIN_UID)return;
+  const el=document.getElementById('mainContent');
+  const reported=coaches.filter(c=>(c.reportCount||0)>0||c.blinded).sort((a,b)=>(b.reportCount||0)-(a.reportCount||0));
+  if(!reported.length){
+    el.innerHTML=`<div class="admin-wrap"><div class="admin-head">🛡 관리자 — 신고 현황</div><div style="padding:24px;text-align:center;color:#9CA3AF;font-size:13px;">신고된 글이 없습니다 ✅</div></div>`;
+    return;
+  }
+  const rows=reported.map(c=>`
+    <div class="admin-row">
+      <div>
+        <div style="font-size:13px;font-weight:600;">${c.name}</div>
+        <div style="font-size:11px;color:#9CA3AF;">${(c.sports||[]).map(s=>'#'+s).join(' ')} · ${c.authorName||''}</div>
+        <div style="font-size:11px;color:#9CA3AF;">${formatDate(c.createdAt)}</div>
+      </div>
+      <div style="text-align:center;">
+        <span style="font-size:13px;font-weight:700;color:${(c.reportCount||0)>=3?'#DC2626':'#B45309'};">🚩 ${c.reportCount||0}회</span>
+      </div>
+      <div style="text-align:center;">
+        <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${c.blinded?'#FEE2E2':'#DCFCE7'};color:${c.blinded?'#DC2626':'#15803D'};">${c.blinded?'블라인드':'정상'}</span>
+      </div>
+      <div style="display:flex;gap:5px;justify-content:flex-end;">
+        ${c.blinded?`<button class="btn-admin-unblind" onclick="adminUnblind('${c.id}')">복구</button>`:''}
+        <button class="btn-admin-del" onclick="adminDelete('${c.id}')">삭제</button>
+      </div>
+    </div>`).join('');
+  el.innerHTML=`<div class="admin-wrap">
+    <div class="admin-head">🛡 관리자 — 신고 현황 (${reported.length}건)</div>
+    <div style="display:grid;grid-template-columns:1fr 80px 80px 120px;padding:8px 18px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;">
+      <span style="font-size:10px;font-weight:700;color:#9CA3AF;">글 정보</span>
+      <span style="font-size:10px;font-weight:700;color:#9CA3AF;text-align:center;">신고수</span>
+      <span style="font-size:10px;font-weight:700;color:#9CA3AF;text-align:center;">상태</span>
+      <span style="font-size:10px;font-weight:700;color:#9CA3AF;text-align:right;">액션</span>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+window.adminUnblind=async id=>{
+  if(currentUser?.uid!==ADMIN_UID)return;
+  await updateDoc(doc(db,'coaches',id),{blinded:false,reportCount:0});
+  showToast('✅ 블라인드 해제됐습니다');
+  await loadCoaches();
+  renderAdmin();
+};
+
+window.adminDelete=async id=>{
+  if(currentUser?.uid!==ADMIN_UID)return;
+  if(!confirm('이 글을 완전히 삭제하시겠습니까?'))return;
+  await deleteDoc(doc(db,'coaches',id));
+  showToast('🗑 글이 삭제됐습니다');
+  await loadCoaches();
+  renderAdmin();
+};
 
 window.showToast=msg=>{
   const t=document.getElementById('toast');
