@@ -702,12 +702,16 @@ function renderSportTags(){
   });
 }
 window.removeSportTag=i=>{sportTags.splice(i,1);renderSportTags();};
-document.getElementById('sportTagInput').addEventListener('keydown',e=>{
-  if(e.key==='Enter'||e.key===','){
+const sportInput = document.getElementById('sportTagInput');
+let isComposing = false;
+sportInput.addEventListener('compositionstart', () => { isComposing = true; });
+sportInput.addEventListener('compositionend', () => { isComposing = false; });
+sportInput.addEventListener('keydown', e => {
+  if((e.key === 'Enter' || e.key === ',') && !isComposing) {
     e.preventDefault();
-    const val=e.target.value.replace(/[,#]/g,'').trim();
-    if(val&&!sportTags.includes(val)){sportTags.push(val);renderSportTags();}
-    e.target.value='';
+    const val = e.target.value.replace(/[,#]/g,'').trim();
+    if(val && !sportTags.includes(val)) { sportTags.push(val); renderSportTags(); }
+    e.target.value = '';
   }
 });
 
