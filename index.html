@@ -314,7 +314,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
         <div class="fg full">
           <label>지도 종목 * (Enter로 추가 — #축구 #줄넘기 등 자유롭게)</label>
           <div class="tag-box" id="sportTagBox" onclick="document.getElementById('sportTagInput').focus()">
-            <input type="text" id="sportTagInput" placeholder="#줄넘기  #K-POP댄스  #리듬트레이닝..." maxlength="20">
+            <input type="text" id="sportTagInput" placeholder="#줄넘기  #K-POP댄스 ..." maxlength="20">
           </div>
         </div>
         <div class="fg full">
@@ -387,7 +387,7 @@ const LOGO = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QC8RXhpZgAASUk
 document.getElementById('loginLogo').src = LOGO;
 document.getElementById('headerLogo').src = LOGO;
 
-const MAIN_SPORTS = ['줄넘기','배드민턴','클라이밍','K-POP댄스','리듬트레이닝','피트니스','수영','테니스','태권도','복싱','아크로바틱','요가·필라테스'];
+const MAIN_SPORTS = ['축구','농구','줄넘기','배드민턴','클라이밍','댄스','피트니스','수영','테니스','태권도','복싱','아크로바틱','요가','필라테스'];
 const CONTACT_LABELS = {kakao:'카카오 오픈채팅',insta:'인스타그램',email:'이메일',phone:'전화번호',other:'링크'};
 const STATUS_MAP = {available:{label:'구직중',cls:'seek'},seeking:{label:'채용중',cls:'hire'}};
 const CAT_COLORS = {'구기':'#1D4ED8','무용·댄스':'#7C3AED','격투·무술':'#B91C1C','수상':'#0E7490','건강·피트니스':'#15803D','기타':'#6B7280'};
