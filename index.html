@@ -68,10 +68,10 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
 
 /* TABLE */
 .tbl-wrap{background:white;border-radius:10px;border:1px solid #E5E7EB;overflow:hidden;}
-.tbl-head{display:grid;grid-template-columns:180px 72px minmax(0,1fr) 140px 110px;padding:8px 16px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;}
+.tbl-head{display:grid;grid-template-columns:160px 72px minmax(0,1fr) 140px 90px;padding:8px 16px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;}
 .tbl-head span{font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.4px;}
 .tbl-head span:last-child{text-align:right;}
-.tbl-row{display:grid;grid-template-columns:180px 72px minmax(0,1fr) 140px 110px;padding:10px 16px;border-bottom:1px solid #F3F4F6;align-items:center;cursor:pointer;transition:background 0.1s;}
+.tbl-row{display:grid;grid-template-columns:160px 72px minmax(0,1fr) 140px 90px;padding:10px 16px;border-bottom:1px solid #F3F4F6;align-items:center;cursor:pointer;transition:background 0.1s;}
 .tbl-row:last-child{border-bottom:none;}
 .tbl-row:hover{background:#FFF8F5;}
 .tbl-row.mine{border-left:3px solid #0062FF;padding-left:13px;}
@@ -164,16 +164,12 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .detail-actions{display:flex;gap:8px;padding:0 24px 24px;}
 
-  /* 탭 */
   .tab-bar{display:flex;gap:0;margin-bottom:16px;border-bottom:1.5px solid #F3F4F6;}
   .tab-btn{padding:10px 18px;font-size:13px;font-weight:500;color:#9CA3AF;border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1.5px;font-family:'Noto Sans KR',sans-serif;transition:all 0.15s;}
   .tab-btn:hover{color:#374151;}
   .tab-btn.on{color:#111827;font-weight:700;border-bottom:2px solid #0062FF;}
-  /* 날짜 */
   .date-txt{font-size:10px;color:#D1D5DB;margin-top:2px;font-weight:400;}
-  /* 블라인드 */
   .tbl-row.blinded{opacity:0.4;pointer-events:none;}
-  /* 드롭다운 */
   .action-dropdown{position:relative;display:inline-block;}
   .btn-more{padding:4px 8px;border-radius:6px;background:transparent;color:#9CA3AF;border:none;cursor:pointer;font-size:16px;font-weight:700;line-height:1;}
   .btn-more:hover{background:#F3F4F6;color:#374151;}
@@ -183,9 +179,6 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
   .dropdown-menu button.danger{color:#EF4444;}
   .dropdown-menu button.danger:hover{background:#FEF2F2;}
   .dropdown-menu .divider{height:1px;background:#F9FAFB;margin:0;}
-  /* 신고 */
-  .btn-report{font-size:11px;padding:5px 8px;border-radius:6px;background:#FEF3C7;color:#B45309;border:none;cursor:pointer;}
-  /* 관리자 */
   .admin-wrap{background:white;border-radius:10px;border:1px solid #E5E7EB;overflow:hidden;}
   .admin-head{padding:14px 18px;background:#0F1B2D;color:white;font-size:14px;font-weight:700;}
   .admin-row{display:grid;grid-template-columns:1fr 80px 80px 120px;padding:10px 18px;border-bottom:1px solid #F3F4F6;align-items:center;gap:8px;font-size:12px;}
@@ -624,15 +617,7 @@ function render(){
       const reportCnt=c.reportCount||0;
       const blinded=c.blinded||false;
       const actions=isMine
-        ?`<div class="action-dropdown" onclick="event.stopPropagation()">
-            <button class="btn-more" onclick="toggleDropdown('dd_${c.id}')">⋯</button>
-            <div class="dropdown-menu" id="dd_${c.id}" style="display:none;">
-              <button onclick="renewPost('${c.id}');closeDropdown('dd_${c.id}')">🔄 갱신하기</button>
-              <button onclick="openEdit('${c.id}');closeDropdown('dd_${c.id}')">✏️ 수정하기</button>
-              <div class="divider"></div>
-              <button class="danger" onclick="deleteCoach('${c.id}');closeDropdown('dd_${c.id}')">🗑 삭제</button>
-            </div>
-          </div>`
+        ?`` 
         :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded&&!isMine?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="신고" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:12px;">🚩</button>`:''}`;
 
       const bg=idx%2===0?'background:white;':'background:#FAFAFA;';
@@ -818,8 +803,9 @@ window.openDetail=async id=>{
     </div>
     <div class="detail-actions">
       ${isMine
-        ?`<button class="btn-edit-s" style="flex:1;padding:11px;font-size:14px;border-radius:9px;" onclick="openEdit('${c.id}')">✏️ 수정</button>
-          <button class="btn-del-s" style="flex:1;padding:11px;font-size:14px;border-radius:9px;" onclick="deleteCoach('${c.id}')">🗑 삭제</button>`
+        ?`<button style="flex:1;padding:11px;font-size:13px;border-radius:9px;background:#DCFCE7;color:#15803D;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="renewPost('${c.id}')">🔄 갱신</button>
+          <button class="btn-edit-s" style="flex:1;padding:11px;font-size:13px;border-radius:9px;" onclick="openEdit('${c.id}')">✏️ 수정</button>
+          <button class="btn-del-s" style="flex:1;padding:11px;font-size:13px;border-radius:9px;" onclick="deleteCoach('${c.id}')">🗑 삭제</button>`
         :`<button class="btn-contact" style="flex:2;padding:11px;font-size:14px;border-radius:9px;" onclick="openContact('${c.id}')">📞 연락하기</button>
           <button class="btn-report" style="padding:11px 14px;border-radius:9px;font-size:13px;" onclick="reportPost('${c.id}')" title="신고">🚩 신고</button>`
       }
