@@ -606,18 +606,16 @@ function render(){
             </div>
           </div>`
         :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded&&!isMine?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="신고" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:12px;">🚩</button>`:''}`;
-      // 아래 라인 무시 (위에서 이미 actions 완성)
-      const _dummy=`button>`
-        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded&&!isMine?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="신고">🚩</button>`:''}`;
+
       const bg=idx%2===0?'background:white;':'background:#FAFAFA;';
       const rowCls=`tbl-row${isMine?' mine':''}${blinded?' blinded':''}${old?' old-post':''}`;
       return `<div class="${rowCls}" style="${bg}" onclick="openDetail('${c.id}')">
         <div class="cell-profile">
           <div class="av" style="background:${color}">${avInner}</div>
           <div style="min-width:0;">
-            <div class="name-txt">${c.name}${isMine?'<span style="font-size:9px;color:#0062FF;margin-left:4px;">내글</span>':''}${old?'<span style="font-size:9px;color:#F59E0B;margin-left:4px;">⚠️오래된글</span>':''}</div>
+            <div class="name-txt">${c.name}${isMine?'<span style="font-size:9px;color:#0062FF;margin-left:4px;">내글</span>':''}${old?'<span style="font-size:9px;color:#F59E0B;margin-left:6px;font-weight:400;">· 30일+</span>':''}</div>
             <div class="sub-txt">${c.gender||'-'} · ${c.age?c.age+'세':'-'} · ${c.career||'-'}</div>
-            <div class="date-txt">${dateStr} · 👁 ${c.viewCount||0}</div>
+            <div class="date-txt">${dateStr}${c.viewCount?` · 조회 ${c.viewCount}`:''}</div>
           </div>
         </div>
         <div><span class="badge ${st.cls}"><span class="bdot"></span>${st.label}</span></div>
