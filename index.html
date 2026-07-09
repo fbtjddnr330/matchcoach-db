@@ -704,14 +704,25 @@ function renderSportTags(){
 window.removeSportTag=i=>{sportTags.splice(i,1);renderSportTags();};
 const sportInput = document.getElementById('sportTagInput');
 let isComposing = false;
+
+function addSportTag() {
+  const val = sportInput.value.replace(/[,#]/g,'').trim();
+  if(val && !sportTags.includes(val)) { sportTags.push(val); renderSportTags(); }
+  sportInput.value = '';
+}
+
 sportInput.addEventListener('compositionstart', () => { isComposing = true; });
-sportInput.addEventListener('compositionend', () => { isComposing = false; });
-sportInput.addEventListener('keyup', e => {
-  if((e.key === 'Enter' || e.key === ',') && !isComposing) {
+sportInput.addEventListener('compositionend', () => {
+  isComposing = false;
+});
+sportInput.addEventListener('keydown', e => {
+  if(e.key === 'Enter' || e.key === ',') {
     e.preventDefault();
-    const val = e.target.value.replace(/[,#]/g,'').trim();
-    if(val && !sportTags.includes(val)) { sportTags.push(val); renderSportTags(); }
-    e.target.value = '';
+    if(isComposing) {
+      setTimeout(() => { addSportTag(); }, 50);
+    } else {
+      addSportTag();
+    }
   }
 });
 
