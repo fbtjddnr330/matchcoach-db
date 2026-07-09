@@ -336,10 +336,11 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
             <div class="region-added" id="regionAddedList"></div>
             <div class="r-add-row">
               <select class="r-sel-sm" id="r_sido" onchange="onRSidoChange()"><option value="">시/도</option></select>
-              <select class="r-sel-sm" id="r_sigungu" onchange="onRSigunguChange()"><option value="">시/군/구</option></select>
-              <select class="r-sel-sm" id="r_dong"><option value="">동/읍/면</option></select>
+              <select class="r-sel-sm" id="r_sigungu" onchange="onRSigunguChange()"><option value="">시/군/구 전체</option></select>
+              <select class="r-sel-sm" id="r_dong"><option value="">동/읍/면 전체</option></select>
               <button class="btn-radd" onclick="addRegion()">+ 추가</button>
             </div>
+            <div style="font-size:11px;color:#9CA3AF;margin-top:6px;">💡 동/읍/면 선택 없이 추가하면 <strong>구 전체</strong>로 등록돼요</div>
           </div>
         </div>
         <div class="fg full">
@@ -773,7 +774,7 @@ window.onRSigunguChange=()=>{
   const sido=document.getElementById('r_sido').value;
   const sigungu=document.getElementById('r_sigungu').value;
   const dong=document.getElementById('r_dong');
-  dong.innerHTML='<option value="">동/읍/면</option>';
+  dong.innerHTML='<option value="">동/읍/면 전체</option>';
   if(sido&&sigungu&&REGIONS[sido]?.[sigungu])REGIONS[sido][sigungu].forEach(d=>dong.innerHTML+=`<option value="${d}">${d}</option>`);
 };
 window.addRegion=()=>{
@@ -791,7 +792,7 @@ window.removeRegion=i=>{regionList.splice(i,1);renderRegionAdded();};
 function resetModalRegion(){
   document.getElementById('r_sido').value='';
   document.getElementById('r_sigungu').innerHTML='<option value="">시/군/구</option>';
-  document.getElementById('r_dong').innerHTML='<option value="">동/읍/면</option>';
+  document.getElementById('r_dong').innerHTML='<option value="">동/읍/면 전체</option>';
 }
 
 document.getElementById('searchInput').addEventListener('input',e=>{searchQuery=e.target.value;render();});
