@@ -532,7 +532,7 @@ function render(){
       </div>`;
     }).join('');
     el.innerHTML=`<div class="tbl-wrap">
-      <div class="tbl-head"><span>이름 / 성별·나이·경력</span><span>상태</span><span>지도 종목</span><span>출강 지역</span><span style="text-align:right">연락</span></div>
+      <div class="tbl-head"><span>이름 또는 닉네임 / 성별·나이·경력</span><span>상태</span><span>지도 종목</span><span>출강 지역</span><span style="text-align:right">연락</span></div>
       ${rows}
     </div>`;
   } else {
@@ -603,7 +603,7 @@ window.openEdit=id=>{
 window.saveCoach=async()=>{
   const name=document.getElementById('f_name').value.trim();
   const contactVal=document.getElementById('f_contact_val').value.trim();
-  if(!name){showToast('이름은 필수입니다');return;}
+  if(!name){showToast('이름 또는 닉네임은 필수입니다');return;}
   if(!contactVal){showToast('연락 방법을 입력해주세요');return;}
   if(sportTags.length===0){showToast('지도 종목을 입력해주세요');return;}
   if(regionList.length===0){showToast('출강 가능 지역을 추가해주세요');return;}
