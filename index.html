@@ -137,6 +137,16 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
 .tag-chip button{background:none;border:none;color:#6D28D9;cursor:pointer;font-size:13px;padding:0;line-height:1;}
 .tag-box input{border:none;outline:none;font-size:13px;flex:1;min-width:80px;padding:2px 0;font-family:'Noto Sans KR',sans-serif;background:transparent;}
 
+/* 채용 폼 - 칩 선택 */
+.chip-group{display:flex;gap:8px;flex-wrap:wrap;}
+.chip-btn{padding:9px 16px;border-radius:20px;border:1.5px solid #E5E7EB;background:white;font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:#374151;transition:all 0.12s;}
+.chip-btn:hover{border-color:#0062FF;}
+.chip-btn.active{background:#0062FF;color:white;border-color:#0062FF;}
+.age-range-row{display:flex;align-items:center;gap:8px;}
+.age-range-row input{width:70px;padding:9px 10px;border-radius:8px;border:1.5px solid #E5E7EB;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;color:#111827;}
+.age-range-row input:focus{border-color:#0062FF;}
+.age-range-row span{font-size:13px;color:#6B7280;}
+
 /* 지역 입력 */
 .region-box{border:1.5px solid #E5E7EB;border-radius:8px;padding:8px 10px;transition:border-color 0.15s;}
 .region-box:focus-within{border-color:#0062FF;}
@@ -350,10 +360,32 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
       <div class="form-grid">
         <div class="fg"><label id="lbl_name">이름 또는 닉네임 *</label><input type="text" id="f_name" placeholder="홍길동"></div>
         <div class="fg"><label id="lbl_gender">성별</label>
-          <select id="f_gender"><option value="">선택</option><option>남</option><option>여</option></select>
+          <select id="f_gender" class="mode-available"><option value="">선택</option><option>남</option><option>여</option></select>
+          <div id="genderChips" class="chip-group mode-seeking" style="display:none;">
+            <button type="button" class="chip-btn" data-val="남자" onclick="pickChip('f_gender_h','genderChips',this)">남자</button>
+            <button type="button" class="chip-btn" data-val="여자" onclick="pickChip('f_gender_h','genderChips',this)">여자</button>
+            <button type="button" class="chip-btn" data-val="무관" onclick="pickChip('f_gender_h','genderChips',this)">무관</button>
+          </div>
+          <input type="hidden" id="f_gender_h">
         </div>
-        <div class="fg"><label id="lbl_age">나이</label><input type="number" id="f_age" placeholder="28" min="18" max="80"></div>
-        <div class="fg"><label id="lbl_career">경력</label><input type="text" id="f_career" placeholder="5년"></div>
+        <div class="fg"><label id="lbl_age">나이</label>
+          <input type="number" id="f_age" class="mode-available" placeholder="28" min="18" max="80">
+          <div id="ageRangeRow" class="age-range-row mode-seeking" style="display:none;">
+            <input type="number" id="f_age_min" placeholder="20" min="18" max="80">
+            <span>~</span>
+            <input type="number" id="f_age_max" placeholder="40" min="18" max="80">
+            <span>세</span>
+          </div>
+        </div>
+        <div class="fg"><label id="lbl_career">경력</label>
+          <input type="text" id="f_career" class="mode-available" placeholder="5년">
+          <div id="careerChips" class="chip-group mode-seeking" style="display:none;">
+            <button type="button" class="chip-btn" data-val="경력자만" onclick="pickChip('f_career_h','careerChips',this)">경력자만</button>
+            <button type="button" class="chip-btn" data-val="신입 가능" onclick="pickChip('f_career_h','careerChips',this)">신입 가능</button>
+            <button type="button" class="chip-btn" data-val="무관" onclick="pickChip('f_career_h','careerChips',this)">무관</button>
+          </div>
+          <input type="hidden" id="f_career_h">
+        </div>
         <div class="fg" id="statusField" style="display:none;"><label>상태 *</label>
           <select id="f_status">
             <option value="available">구직중 (일자리 찾는 중)</option>
@@ -393,7 +425,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
           </div>
         </div>
         <div class="fg full">
-          <label>출강 가능 지역 * (여러 지역 추가 가능)</label>
+          <label id="lbl_region">출강 가능 지역 * (여러 지역 추가 가능)</label>
           <div class="region-box">
             <div class="region-added" id="regionAddedList"></div>
             <div class="r-add-row">
@@ -464,35 +496,52 @@ const FORM_LABELS = {
     cert:{label:'자격증',ph:'생활스포츠지도사 2급'},
     salary:{label:'희망 급여',ph:'월 250만원 / 협의'},
     sports:{label:'지도 종목 * (Enter로 추가 — #축구 #줄넘기 등 자유롭게)'},
+    region:{label:'출강 가능 지역 * (여러 지역 추가 가능)'},
     bio:{label:'소개 / 글 내용',ph:'경력, 전문 분야, 희망 근무 조건 등을 자유롭게 작성해주세요'}
   },
   seeking:{
     name:{label:'센터명 또는 담당자명 *',ph:'OO스포츠센터'},
     gender:{label:'선호 성별'},
-    age:{label:'선호 연령대',ph:'20~30대'},
-    career:{label:'요구 경력',ph:'3년 이상'},
+    age:{label:'선호 연령대'},
+    career:{label:'경력'},
     cert:{label:'요구 자격증',ph:'생활스포츠지도사 2급 이상'},
-    salary:{label:'제공 급여',ph:'월 250만원 / 협의'},
+    salary:{label:'급여',ph:'월 250만원 / 협의'},
     sports:{label:'모집 종목 * (Enter로 추가 — #축구 #줄넘기 등 자유롭게)'},
+    region:{label:'센터 위치 * (여러 지역 추가 가능)'},
     bio:{label:'센터 소개 및 모집 요건',ph:'센터 소개, 원하는 지원자 유형, 자격 요건 등을 자유롭게 작성해주세요'}
   }
 };
+window.pickChip=(hiddenId,groupId,btn)=>{
+  document.getElementById(hiddenId).value=btn.dataset.val;
+  document.querySelectorAll('#'+groupId+' .chip-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function highlightChip(groupId,value){
+  document.querySelectorAll('#'+groupId+' .chip-btn').forEach(b=>b.classList.toggle('active',b.dataset.val===value));
+}
+function setModeVisibility(status){
+  const seeking=status==='seeking';
+  document.querySelectorAll('.mode-available').forEach(el=>{el.style.display=seeking?'none':'';});
+  document.querySelectorAll('.mode-seeking').forEach(el=>{el.style.display=seeking?'flex':'none';});
+}
 function applyFormLabels(status){
   const m=FORM_LABELS[status==='seeking'?'seeking':'available'];
   document.getElementById('lbl_name').textContent=m.name.label;
   document.getElementById('f_name').placeholder=m.name.ph;
   document.getElementById('lbl_gender').textContent=m.gender.label;
   document.getElementById('lbl_age').textContent=m.age.label;
-  document.getElementById('f_age').placeholder=m.age.ph;
+  document.getElementById('f_age').placeholder=m.age.ph||'';
   document.getElementById('lbl_career').textContent=m.career.label;
-  document.getElementById('f_career').placeholder=m.career.ph;
+  document.getElementById('f_career').placeholder=m.career.ph||'';
   document.getElementById('lbl_cert').textContent=m.cert.label;
   document.getElementById('f_cert').placeholder=m.cert.ph;
   document.getElementById('lbl_salary').textContent=m.salary.label;
   document.getElementById('f_salary').placeholder=m.salary.ph;
   document.getElementById('lbl_sports').textContent=m.sports.label;
+  document.getElementById('lbl_region').textContent=m.region.label;
   document.getElementById('lbl_bio').textContent=m.bio.label;
   document.getElementById('f_bio').placeholder=m.bio.ph;
+  setModeVisibility(status);
 }
 const CAT_COLORS = {'구기':'#1D4ED8','무용·댄스':'#7C3AED','격투·무술':'#B91C1C','수상':'#0E7490','건강·피트니스':'#15803D','기타':'#6B7280'};
 
@@ -720,8 +769,11 @@ window.openAddModal=(preStatus)=>{
   badge.style.background = statusColor;
   badge.style.color = statusTextColor;
   document.getElementById('f_status').value = preStatus || 'available';
-  ['f_name','f_age','f_career','f_cert','f_salary','f_bio','f_contact_val'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f_name','f_age','f_career','f_cert','f_salary','f_bio','f_contact_val','f_age_min','f_age_max'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('f_gender').value='';
+  document.getElementById('f_gender_h').value='';
+  document.getElementById('f_career_h').value='';
+  document.querySelectorAll('#genderChips .chip-btn, #careerChips .chip-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('f_category').value='';
   document.getElementById('f_contact_type').value='kakao';
   applyFormLabels(preStatus);
@@ -734,18 +786,30 @@ window.openEdit=id=>{
   if(!c||c.authorUid!==currentUser?.uid)return;
   editingId=id; sportTags=[...(c.sports||[])]; regionList=[...(c.regions||[])];
   document.getElementById('modalTitle').textContent='글 수정';
+  const status=c.status||'available';
   document.getElementById('f_name').value=c.name||'';
-  document.getElementById('f_gender').value=c.gender||'';
-  document.getElementById('f_age').value=c.age||'';
-  document.getElementById('f_career').value=c.career||'';
-  document.getElementById('f_status').value=c.status||'available';
+  document.getElementById('f_status').value=status;
+  if(status==='seeking'){
+    document.getElementById('f_gender_h').value=c.gender||'';
+    highlightChip('genderChips',c.gender||'');
+    document.getElementById('f_career_h').value=c.career||'';
+    highlightChip('careerChips',c.career||'');
+    const ageStr=(c.age||'').toString();
+    const [ageMin,ageMax]=ageStr.includes('~')?ageStr.split('~'):[ageStr,''];
+    document.getElementById('f_age_min').value=ageMin||'';
+    document.getElementById('f_age_max').value=ageMax||'';
+  }else{
+    document.getElementById('f_gender').value=c.gender||'';
+    document.getElementById('f_age').value=c.age||'';
+    document.getElementById('f_career').value=c.career||'';
+  }
   document.getElementById('f_cert').value=c.cert||'';
   document.getElementById('f_salary').value=c.salary||'';
   document.getElementById('f_category').value=c.category||'';
   document.getElementById('f_contact_type').value=c.contactType||'kakao';
   document.getElementById('f_contact_val').value=c.contactVal||'';
   document.getElementById('f_bio').value=c.bio||'';
-  applyFormLabels(c.status||'available');
+  applyFormLabels(status);
   renderSportTags(); renderRegionAdded(); resetModalRegion();
   document.getElementById('editModal').classList.add('on');
   closeModal('detailModal');
@@ -759,12 +823,26 @@ window.saveCoach=async()=>{
   if(!contactVal){showToast('연락 방법을 입력해주세요');return;}
   if(sportTags.length===0){showToast('지도 종목을 입력해주세요');return;}
   if(regionList.length===0){showToast('출강 가능 지역을 추가해주세요');return;}
+  const status=document.getElementById('f_status').value;
+  const isSeeking=status==='seeking';
+  let gender,age,career;
+  if(isSeeking){
+    gender=document.getElementById('f_gender_h').value;
+    career=document.getElementById('f_career_h').value;
+    const ageMin=document.getElementById('f_age_min').value;
+    const ageMax=document.getElementById('f_age_max').value;
+    age=ageMin&&ageMax?`${ageMin}~${ageMax}`:(ageMin||ageMax||'');
+  }else{
+    gender=document.getElementById('f_gender').value;
+    career=document.getElementById('f_career').value.trim();
+    age=document.getElementById('f_age').value?parseInt(document.getElementById('f_age').value):null;
+  }
   const data={
     name,
-    gender:document.getElementById('f_gender').value,
-    age:document.getElementById('f_age').value?parseInt(document.getElementById('f_age').value):null,
-    status:document.getElementById('f_status').value,
-    career:document.getElementById('f_career').value.trim(),
+    gender,
+    age,
+    status,
+    career,
     cert:document.getElementById('f_cert').value.trim(),
     salary:document.getElementById('f_salary').value.trim(),
     category:document.getElementById('f_category').value,
