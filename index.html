@@ -190,12 +190,38 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
 .toast{position:fixed;bottom:20px;right:20px;background:#111827;color:white;padding:11px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;transform:translateY(70px);opacity:0;transition:all 0.3s;border-left:3px solid #0062FF;}
 .toast.on{transform:translateY(0);opacity:1;}
 
+.mobile-filter-btn{display:none;align-items:center;gap:6px;background:white;border:1px solid #E5E7EB;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;color:#374151;cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;}
+
 @media(max-width:768px){
-  .sidebar{display:none;}
-  .layout{padding:12px;}
-  .tbl-head,.tbl-row{grid-template-columns:1fr 60px 90px;}
-  .cell-sports,.cell-region{display:none;}
+  .header-inner{padding:0 14px;}
   .stat-bar,.user-nm{display:none;}
+
+  /* 상단 검색/필터 바 — 한 줄에 다 안 들어가니 줄바꿈 */
+  .topbar{padding:10px 14px;}
+  .topbar-inner{flex-wrap:wrap;}
+  .search-wrap{flex:1 1 100%;order:1;}
+  .region-row{flex:1 1 auto;flex-wrap:wrap;order:2;}
+  .mobile-filter-btn{display:flex;order:3;}
+  .btn-add{order:4;margin-left:auto;}
+
+  .layout{padding:12px;flex-direction:column;}
+
+  /* 사이드바 필터 — 기본 숨김, 버튼으로 토글 */
+  .sidebar{display:none;width:100%;position:static;top:auto;}
+  .sidebar.mobile-open{display:block;margin-bottom:12px;}
+
+  /* 리스트 보기 — 표 대신 카드형으로 쌓기 */
+  .tbl-head{display:none;}
+  .tbl-row{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:12px 14px;}
+  .tbl-row.mine{padding-left:11px;}
+  .cell-sports{flex-wrap:wrap;}
+  .cell-action{justify-content:flex-start;}
+
+  /* 글 등록/수정 모달 — 2열 → 1열 */
+  .mo-body{padding:16px;}
+  .mo-head{padding:16px 16px 14px;}
+  .form-grid{grid-template-columns:1fr;}
+  .age-range-row{flex-wrap:wrap;}
 }
 </style>
 </head>
@@ -248,6 +274,10 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
         <select class="r-sel" id="fDong"><option value="">동/읍/면</option></select>
         <button onclick="resetRegion()" style="font-size:11px;padding:7px 10px;border-radius:7px;border:1px solid #E5E7EB;background:white;color:#6B7280;cursor:pointer;">초기화</button>
       </div>
+      <button class="mobile-filter-btn" onclick="toggleMobileFilters()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        필터
+      </button>
       <button class="btn-add" onclick="openTypeModal()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
         글 올리기
@@ -256,7 +286,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
   </div>
 
   <div class="layout">
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
       <div class="sb-section">
         <div class="sb-title">상태</div>
         <div class="sb-item"><input type="checkbox" id="fs_seek" onchange="applyFilters()"><label for="fs_seek">구직중</label><span class="cnt" id="cnt_seek">0</span></div>
@@ -631,6 +661,7 @@ function renderRegionLabel(regions){
 }
 
 window.applyFilters=function(){render();};
+window.toggleMobileFilters=function(){document.getElementById('sidebar').classList.toggle('mobile-open');};
 window.resetAllFilters=function(){
   ['fs_seek','fs_hire','fg_m','fg_f','fa_20','fa_30','fa_40','fa_50'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   MAIN_SPORTS.forEach((_,i)=>{const el=document.getElementById('fsp_'+i);if(el)el.checked=false;});
