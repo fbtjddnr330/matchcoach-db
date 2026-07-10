@@ -348,20 +348,20 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
     </div>
     <div class="mo-body">
       <div class="form-grid">
-        <div class="fg"><label>이름 또는 닉네임 *</label><input type="text" id="f_name" placeholder="홍길동"></div>
-        <div class="fg"><label>성별</label>
+        <div class="fg"><label id="lbl_name">이름 또는 닉네임 *</label><input type="text" id="f_name" placeholder="홍길동"></div>
+        <div class="fg"><label id="lbl_gender">성별</label>
           <select id="f_gender"><option value="">선택</option><option>남</option><option>여</option></select>
         </div>
-        <div class="fg"><label>나이</label><input type="number" id="f_age" placeholder="28" min="18" max="80"></div>
-        <div class="fg"><label>경력</label><input type="text" id="f_career" placeholder="5년"></div>
+        <div class="fg"><label id="lbl_age">나이</label><input type="number" id="f_age" placeholder="28" min="18" max="80"></div>
+        <div class="fg"><label id="lbl_career">경력</label><input type="text" id="f_career" placeholder="5년"></div>
         <div class="fg" id="statusField" style="display:none;"><label>상태 *</label>
           <select id="f_status">
             <option value="available">구직중 (일자리 찾는 중)</option>
             <option value="seeking">채용중 (강사 모집 중)</option>
           </select>
         </div>
-        <div class="fg"><label>자격증</label><input type="text" id="f_cert" placeholder="생활스포츠지도사 2급"></div>
-        <div class="fg"><label>희망 급여</label><input type="text" id="f_salary" placeholder="월 250만원 / 협의"></div>
+        <div class="fg"><label id="lbl_cert">자격증</label><input type="text" id="f_cert" placeholder="생활스포츠지도사 2급"></div>
+        <div class="fg"><label id="lbl_salary">희망 급여</label><input type="text" id="f_salary" placeholder="월 250만원 / 협의"></div>
         <div class="fg"><label>종목 대분류</label>
           <select id="f_category">
             <option value="">선택</option>
@@ -374,7 +374,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
           </select>
         </div>
         <div class="fg full">
-          <label>지도 종목 * (Enter로 추가 — #축구 #줄넘기 등 자유롭게)</label>
+          <label id="lbl_sports">지도 종목 * (Enter로 추가 — #축구 #줄넘기 등 자유롭게)</label>
           <div class="tag-box" id="sportTagBox" onclick="document.getElementById('sportTagInput').focus()">
             <input type="text" id="sportTagInput" placeholder="#축구  #댄스 ..." maxlength="20">
           </div>
@@ -406,7 +406,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
           </div>
         </div>
         <div class="fg full">
-          <label>소개 / 글 내용</label>
+          <label id="lbl_bio">소개 / 글 내용</label>
           <textarea id="f_bio" placeholder="경력, 전문 분야, 희망 근무 조건 등을 자유롭게 작성해주세요"></textarea>
         </div>
       </div>
@@ -454,6 +454,46 @@ const MAIN_SPORTS = ['축구','농구','줄넘기','배드민턴','클라이밍'
 const ADMIN_UID = 'd7QYShvsv9WihlczimfuIndo41s2';
 const CONTACT_LABELS = {kakao:'카카오 오픈채팅',insta:'인스타그램',email:'이메일',phone:'전화번호',other:'링크'};
 const STATUS_MAP = {available:{label:'구직중',cls:'seek'},seeking:{label:'채용중',cls:'hire'}};
+
+const FORM_LABELS = {
+  available:{
+    name:{label:'이름 또는 닉네임 *',ph:'홍길동'},
+    gender:{label:'성별'},
+    age:{label:'나이',ph:'28'},
+    career:{label:'경력',ph:'5년'},
+    cert:{label:'자격증',ph:'생활스포츠지도사 2급'},
+    salary:{label:'희망 급여',ph:'월 250만원 / 협의'},
+    sports:{label:'지도 종목 * (Enter로 추가 — #축구 #줄넘기 등 자유롭게)'},
+    bio:{label:'소개 / 글 내용',ph:'경력, 전문 분야, 희망 근무 조건 등을 자유롭게 작성해주세요'}
+  },
+  seeking:{
+    name:{label:'센터명 또는 담당자명 *',ph:'OO스포츠센터'},
+    gender:{label:'선호 성별'},
+    age:{label:'선호 연령대',ph:'20~30대'},
+    career:{label:'요구 경력',ph:'3년 이상'},
+    cert:{label:'요구 자격증',ph:'생활스포츠지도사 2급 이상'},
+    salary:{label:'제공 급여',ph:'월 250만원 / 협의'},
+    sports:{label:'모집 종목 * (Enter로 추가 — #축구 #줄넘기 등 자유롭게)'},
+    bio:{label:'센터 소개 및 모집 요건',ph:'센터 소개, 원하는 지원자 유형, 자격 요건 등을 자유롭게 작성해주세요'}
+  }
+};
+function applyFormLabels(status){
+  const m=FORM_LABELS[status==='seeking'?'seeking':'available'];
+  document.getElementById('lbl_name').textContent=m.name.label;
+  document.getElementById('f_name').placeholder=m.name.ph;
+  document.getElementById('lbl_gender').textContent=m.gender.label;
+  document.getElementById('lbl_age').textContent=m.age.label;
+  document.getElementById('f_age').placeholder=m.age.ph;
+  document.getElementById('lbl_career').textContent=m.career.label;
+  document.getElementById('f_career').placeholder=m.career.ph;
+  document.getElementById('lbl_cert').textContent=m.cert.label;
+  document.getElementById('f_cert').placeholder=m.cert.ph;
+  document.getElementById('lbl_salary').textContent=m.salary.label;
+  document.getElementById('f_salary').placeholder=m.salary.ph;
+  document.getElementById('lbl_sports').textContent=m.sports.label;
+  document.getElementById('lbl_bio').textContent=m.bio.label;
+  document.getElementById('f_bio').placeholder=m.bio.ph;
+}
 const CAT_COLORS = {'구기':'#1D4ED8','무용·댄스':'#7C3AED','격투·무술':'#B91C1C','수상':'#0E7490','건강·피트니스':'#15803D','기타':'#6B7280'};
 
 const REGIONS = {"서울특별시":{"강남구":["개포동","논현동","대치동","도곡동","삼성동","신사동","압구정동","역삼동","청담동"],"강동구":["강일동","고덕동","길동","둔촌동","명일동","상일동","성내동","암사동","천호동"],"강북구":["번동","수유동","우이동","미아동"],"강서구":["가양동","등촌동","마곡동","방화동","염창동","화곡동"],"관악구":["남현동","봉천동","신림동"],"광진구":["광장동","구의동","군자동","능동","자양동","중곡동","화양동"],"구로구":["가리봉동","개봉동","고척동","구로동","신도림동","오류동"],"금천구":["가산동","독산동","시흥동"],"노원구":["공릉동","상계동","월계동","중계동","하계동"],"도봉구":["도봉동","방학동","쌍문동","창동"],"동대문구":["답십리동","신설동","이문동","전농동","제기동","청량리동","회기동","휘경동"],"동작구":["노량진동","대방동","동작동","사당동","상도동","신대방동"],"마포구":["공덕동","대흥동","망원동","상수동","서교동","성산동","아현동","합정동"],"서대문구":["남가좌동","북가좌동","신촌동","연희동","홍은동","홍제동"],"서초구":["내곡동","반포동","방배동","서초동","양재동","잠원동"],"성동구":["금호동","마장동","성수동","옥수동","왕십리동","행당동"],"성북구":["길음동","돈암동","보문동","석관동","성북동","안암동","장위동","종암동"],"송파구":["가락동","거여동","마천동","문정동","방이동","삼전동","석촌동","송파동","신천동","오금동","위례동","잠실동","장지동","풍납동"],"양천구":["목동","신정동","신월동"],"영등포구":["당산동","대림동","도림동","문래동","신길동","여의도동","영등포동"],"용산구":["동빙고동","보광동","서빙고동","이촌동","이태원동","청파동","한강로동","한남동"],"은평구":["갈현동","구산동","녹번동","불광동","수색동","응암동"],"종로구":["가회동","계동","부암동","사직동","삼청동","청운동","평창동","혜화동"],"중구":["광희동","명동","신당동","을지로","장충동","충무로"],"중랑구":["면목동","묵동","상봉동","신내동","중화동"]},"부산광역시":{"강서구":["가락동","대저동","명지동"],"금정구":["구서동","남산동","노포동","부곡동","장전동"],"기장군":["기장읍","장안읍","정관읍","일광읍"],"남구":["감만동","대연동","문현동","용호동","우암동"],"동구":["범일동","수정동","좌천동","초량동"],"동래구":["낙민동","명륜동","명장동","복천동","사직동","안락동","온천동"],"부산진구":["개금동","당감동","범전동","부전동","양정동"],"북구":["구포동","금곡동","덕천동","만덕동","화명동"],"사하구":["감천동","괴정동","다대동","당리동","신평동","장림동","하단동"],"수영구":["광안동","남천동","민락동","수영동","망미동"],"연제구":["거제동","연산동"],"해운대구":["반송동","반여동","송정동","우동","재송동","좌동","중동"]},"인천광역시":{"계양구":["계산동","박촌동","임학동"],"남동구":["간석동","구월동","만수동"],"미추홀구":["관교동","도화동","숭의동","주안동"],"부평구":["부개동","부평동","산곡동","삼산동"],"서구":["가좌동","검단동","검암경서동","석남동","청라동"],"연수구":["동춘동","송도동","연수동"]},"대구광역시":{"달서구":["감삼동","두류동","상인동","월성동","이곡동","진천동"],"동구":["각산동","불로봉무동","신암동","신서동"],"북구":["검단동","구암동","국우동","노원동","태전동"],"수성구":["고산동","만촌동","범물동","범어동","수성동","시지동","황금동"],"중구":["공평동","남산동","대봉동","삼덕동"]},"광주광역시":{"광산구":["도산동","비아동","산정동","수완동","신가동","신창동"],"남구":["방림동","백운동","봉선동","사직동","월산동"],"동구":["계림동","동명동","운림동","학동"],"북구":["각화동","금곡동","두암동","문흥동","용봉동","운암동","일곡동"],"서구":["금호동","농성동","동천동","마륵동","화정동"]},"대전광역시":{"대덕구":["법동","신탄진동","중리동"],"동구":["가양동","대동","성남동","인동","판암동"],"서구":["가수원동","갈마동","관저동","둔산동","월평동"],"유성구":["관평동","노은동","반석동","봉명동","전민동","지족동"],"중구":["대흥동","목동","문화동","태평동"]},"경기도":{"고양시 덕양구":["강매동","고양동","능곡동","행신동","화전동"],"고양시 일산동구":["마두동","백석동","식사동","장항동","중산동","풍동"],"고양시 일산서구":["구산동","대화동","덕이동","주엽동","탄현동"],"성남시 분당구":["구미동","대장동","백현동","분당동","삼평동","서현동","수내동","야탑동","운중동","이매동","정자동","판교동"],"성남시 수정구":["복정동","수진동","신흥동","위례동"],"성남시 중원구":["금광동","상대원동","은행동"],"수원시 권선구":["고색동","구운동","권선동","세류동","호매실동"],"수원시 영통구":["광교동","매탄동","영통동","이의동"],"수원시 장안구":["연무동","정자동","조원동","천천동"],"수원시 팔달구":["교동","남수동","인계동","지동","화서동"],"용인시 기흥구":["공세동","구갈동","동백동","마북동","보정동","신갈동","영덕동"],"용인시 수지구":["고기동","동천동","상현동","신봉동","풍덕천동"],"화성시":["남양읍","동탄면","봉담읍","향남읍"],"남양주시":["가운동","금곡동","다산동","별내동","오남읍","와부읍","진접읍","퇴계원읍","평내동","호평동"],"부천시":["고강동","상동","소사동","송내동","심곡동","원미동","중동"],"안산시 단원구":["고잔동","선감동","와동","원곡동"],"안산시 상록구":["본오동","사사동","수암동","월피동"],"안양시 동안구":["갈산동","관양동","비산동","호계동"],"안양시 만안구":["박달동","안양동","석수동"],"시흥시":["거모동","군자동","능곡동","대야동","배곧동","정왕동"],"파주시":["교하동","금촌동","문산읍","운정동"],"평택시":["고덕동","서정동","안중읍","포승읍"],"김포시":["걸포동","사우동","양촌읍","풍무동"],"의정부시":["가능동","금오동","녹양동","민락동","신곡동"],"하남시":["덕풍동","미사동","신장동"]},"강원도":{"강릉시":["강동면","교동","남문동","노암동","주문진읍","중앙동"],"춘천시":["강남동","교동","동면","사농동","석사동","약사동","온의동","우두동","퇴계동","효자동"],"원주시":["관설동","단계동","단구동","무실동","반곡동","봉산동","우산동","태장동"],"속초시":["대포동","동명동","영랑동","조양동","중앙동"]},"충청북도":{"청주시 상당구":["가덕면","낭성면","미원면","사천동","중앙동"],"청주시 서원구":["개신동","궁동","모충동","사직동","수곡동","분평동"],"청주시 청원구":["내덕동","오창읍","우암동"],"청주시 흥덕구":["가경동","강서동","봉명동","복대동","산남동","오송읍"],"충주시":["교현동","달천동","성내동","칠금동"]},"충청남도":{"천안시 동남구":["동면","병천면","성남면"],"천안시 서북구":["입장면","직산읍","성환읍"],"아산시":["배방읍","온양동"],"공주시":["반포면","유구읍"],"당진시":["당진시","송악읍","합덕읍"]},"전라북도":{"전주시 덕진구":["덕진동","금암동","송천동","우아동","인후동","팔복동"],"전주시 완산구":["경원동","교동","다가동","삼천동","중화산동","풍남동","평화동"],"군산시":["미성동","소룡동","조촌동"],"익산시":["신동","익산동","인화동"]},"전라남도":{"광양시":["광양읍","중마동","황금동"],"목포시":["경동","달동","삼학동","신흥동","옥암동"],"순천시":["승주읍"],"여수시":["돌산읍"]},"경상북도":{"경산시":["남천면","압량읍","진량읍","하양읍"],"경주시":["강동면","건천읍","안강읍"],"구미시":["고아읍","선산읍"],"포항시 남구":["구룡포읍","오천읍"],"포항시 북구":["흥해읍"],"안동시":["안동동","풍산읍"]},"경상남도":{"창원시 성산구":["남산동","성주동"],"창원시 의창구":["동읍","북면"],"김해시":["장유동","진영읍"],"양산시":["물금읍","웅상읍"],"진주시":["상대동"],"거제시":["고현동"]},"제주특별자치도":{"제주시":["건입동","노형동","봉개동","삼도동","삼양동","애월읍","연동","외도동","용담동","이도동","이호동","일도동","조천읍","한경면","한림읍","화북동"],"서귀포시":["강정동","남원읍","대정읍","동홍동","서귀동","성산읍","표선면"]}};
@@ -640,6 +680,10 @@ function render(){
       const avInner=c.authorPhoto?`<img src="${c.authorPhoto}" alt="">`:(c.name||'?').charAt(0);
       const vis=(c.sports||[]).slice(0,3); const extra=(c.sports||[]).length-3;
       const sportHtml=vis.map(s=>`<span class="s-tag">#${s}</span>`).join('')+(extra>0?`<span class="s-more">+${extra}</span>`:'');
+      const blinded=c.blinded||false;
+      const actions=isMine
+        ?''
+        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="신고" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:12px;">🚩</button>`:''}`;
       return `<div class="g-card${isMine?' mine':''}" onclick="openDetail('${c.id}')">
         <div class="g-card-top">
           <div class="av" style="background:${color}">${avInner}</div>
@@ -651,6 +695,7 @@ function render(){
         </div>
         <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:8px;">${sportHtml}</div>
         <div style="font-size:11px;color:#6B7280;">📍 ${renderRegionLabel(c.regions||[])}</div>
+        ${isMine?'':`<div style="display:flex;gap:6px;justify-content:flex-end;margin-top:10px;" onclick="event.stopPropagation()">${actions}</div>`}
       </div>`;
     }).join('');
     el.innerHTML=`<div class="grid-wrap">${cards}</div>`;
@@ -677,9 +722,9 @@ window.openAddModal=(preStatus)=>{
   document.getElementById('f_status').value = preStatus || 'available';
   ['f_name','f_age','f_career','f_cert','f_salary','f_bio','f_contact_val'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('f_gender').value='';
-  document.getElementById('f_status').value='available';
   document.getElementById('f_category').value='';
   document.getElementById('f_contact_type').value='kakao';
+  applyFormLabels(preStatus);
   renderSportTags(); renderRegionAdded(); resetModalRegion();
   document.getElementById('editModal').classList.add('on');
 };
@@ -700,6 +745,7 @@ window.openEdit=id=>{
   document.getElementById('f_contact_type').value=c.contactType||'kakao';
   document.getElementById('f_contact_val').value=c.contactVal||'';
   document.getElementById('f_bio').value=c.bio||'';
+  applyFormLabels(c.status||'available');
   renderSportTags(); renderRegionAdded(); resetModalRegion();
   document.getElementById('editModal').classList.add('on');
   closeModal('detailModal');
