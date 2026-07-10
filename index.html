@@ -170,15 +170,6 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
   .tab-btn.on{color:#111827;font-weight:700;border-bottom:2px solid #0062FF;}
   .date-txt{font-size:10px;color:#D1D5DB;margin-top:2px;font-weight:400;}
   .tbl-row.blinded{opacity:0.4;pointer-events:none;}
-  .action-dropdown{position:relative;display:inline-block;}
-  .btn-more{padding:4px 8px;border-radius:6px;background:transparent;color:#9CA3AF;border:none;cursor:pointer;font-size:16px;font-weight:700;line-height:1;}
-  .btn-more:hover{background:#F3F4F6;color:#374151;}
-  .dropdown-menu{position:absolute;right:0;top:calc(100% + 6px);background:white;border:1px solid #F3F4F6;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.1);min-width:130px;z-index:50;overflow:hidden;}
-  .dropdown-menu button{display:block;width:100%;padding:11px 16px;font-size:13px;text-align:left;border:none;background:white;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:#374151;transition:background 0.1s;}
-  .dropdown-menu button:hover{background:#F9FAFB;}
-  .dropdown-menu button.danger{color:#EF4444;}
-  .dropdown-menu button.danger:hover{background:#FEF2F2;}
-  .dropdown-menu .divider{height:1px;background:#F9FAFB;margin:0;}
   .admin-wrap{background:white;border-radius:10px;border:1px solid #E5E7EB;overflow:hidden;}
   .admin-head{padding:14px 18px;background:#0F1B2D;color:white;font-size:14px;font-weight:700;}
   .admin-row{display:grid;grid-template-columns:1fr 80px 80px 120px;padding:10px 18px;border-bottom:1px solid #F3F4F6;align-items:center;gap:8px;font-size:12px;}
@@ -1044,22 +1035,6 @@ window.selectType=status=>{
 };
 
 
-window.toggleDropdown=id=>{
-  // 다른 드롭다운 모두 닫기
-  document.querySelectorAll('.dropdown-menu').forEach(el=>{
-    if(el.id!==id) el.style.display='none';
-  });
-  const el=document.getElementById(id);
-  if(el) el.style.display=el.style.display==='none'?'block':'none';
-};
-window.closeDropdown=id=>{
-  const el=document.getElementById(id);
-  if(el) el.style.display='none';
-};
-// 외부 클릭시 드롭다운 닫기
-document.addEventListener('click',()=>{
-  document.querySelectorAll('.dropdown-menu').forEach(el=>el.style.display='none');
-});
 
 window.showToast=msg=>{
   const t=document.getElementById('toast');
