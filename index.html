@@ -244,6 +244,8 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
   .age-range-row{flex-wrap:wrap;}
 }
 </style>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"></script>
+<script>if(window.Kakao&&!Kakao.isInitialized()){Kakao.init('a113410eae959838bdf492102b33162a');}</script>
 </head>
 <body>
 
@@ -276,6 +278,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
         <div class="user-info">
           <img class="user-av" id="userAvatar" src="" alt="">
           <span class="user-nm" id="userName"></span>
+          <span id="accessTimer" style="display:none;font-size:10px;color:#F59E0B;font-weight:600;"></span>
           <button class="btn-logout" onclick="signOut()">로그아웃</button>
         </div>
       </div>
@@ -521,6 +524,21 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
   <div class="mo-box" id="detailContent"></div>
 </div>
 
+<div class="mo" id="shareGateModal">
+  <div class="mo-box" style="max-width:380px;">
+    <div class="mo-head">
+      <div class="mo-title">🔓 강사 연락처를 보려면</div>
+      <button class="mo-close" onclick="closeModal('shareGateModal')">✕</button>
+    </div>
+    <div class="mo-body" style="padding:28px 24px;text-align:center;">
+      <div style="font-size:13px;color:#6B7280;line-height:1.7;margin-bottom:22px;white-space:pre-line;">카카오톡으로 매치코치를 1회 공유하면
+24시간 동안 모든 강사 정보를 열람할 수 있어요</div>
+      <button onclick="shareToKakao()" style="width:100%;background:#FEE500;color:#191919;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">💬 카카오톡으로 공유하기</button>
+      <div style="font-size:11px;color:#9CA3AF;margin-top:14px;">공유 후 자동으로 열람권이 활성화됩니다</div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -528,7 +546,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc,
-  query, orderBy, serverTimestamp, increment, where, getDoc, arrayUnion }
+  query, orderBy, serverTimestamp, increment, where, getDoc, arrayUnion, setDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const fbConfig = {
@@ -666,8 +684,9 @@ const REGIONS = {"서울특별시":{"강남구":["개포동","논현동","대치
 
 let coaches=[], currentUser=null, editingId=null, sportTags=[], regionList=[], currentView='list', searchQuery='', currentTab='all';
 let filterRegion={sido:'',sigungu:'',dong:''};
+let sharedAt=null, hasAccess=false, accessTimerInterval=null, pendingDetailId=null;
 
-onAuthStateChanged(auth, user=>{
+onAuthStateChanged(auth, async user=>{
   if(user){
     currentUser=user;
     document.getElementById('loginScreen').style.display='none';
@@ -681,12 +700,72 @@ onAuthStateChanged(auth, user=>{
     if(user.uid === ADMIN_UID) {
       document.getElementById('tab_admin').style.display = 'block';
     }
+    // 카카오 공유 24시간 열람권 상태 확인
+    try{
+      const uDoc=await getDoc(doc(db,'users',user.uid));
+      sharedAt=uDoc.exists()?uDoc.data().sharedAt:null;
+    }catch(e){sharedAt=null;}
+    updateAccessState();
+    if(accessTimerInterval)clearInterval(accessTimerInterval);
+    accessTimerInterval=setInterval(updateAccessState,60000);
   } else {
     currentUser=null;
     document.getElementById('loginScreen').style.display='flex';
     document.getElementById('app').style.display='none';
+    sharedAt=null; hasAccess=false;
+    if(accessTimerInterval){clearInterval(accessTimerInterval);accessTimerInterval=null;}
   }
 });
+
+// ── 카카오 공유 24시간 열람권 ──
+function updateAccessState(){
+  const el=document.getElementById('accessTimer');
+  if(!sharedAt){
+    hasAccess=false;
+    if(el)el.style.display='none';
+    return;
+  }
+  const sharedMs=sharedAt.toDate?sharedAt.toDate().getTime():sharedAt.seconds*1000;
+  const remainMs=(sharedMs+24*60*60*1000)-Date.now();
+  hasAccess=remainMs>0;
+  if(!el)return;
+  if(!hasAccess){el.style.display='none';return;}
+  const remainHours=Math.max(1,Math.ceil(remainMs/(60*60*1000)));
+  el.style.display='';
+  el.textContent=`⏱ ${remainHours}시간 후 만료`;
+}
+
+window.shareToKakao=()=>{
+  if(!window.Kakao||!Kakao.isInitialized()){showToast('카카오 공유 기능을 불러오지 못했습니다');return;}
+  Kakao.Share.sendDefault({
+    objectType:'feed',
+    content:{
+      title:'매치코치 - 스포츠강사 구인구직',
+      description:'전국 스포츠 강사 DB. 종목/지역별 검색 가능',
+      imageUrl:'https://matchcoach.kr/og-image.png',
+      link:{ mobileWebUrl:'https://matchcoach.kr', webUrl:'https://matchcoach.kr' }
+    },
+    buttons:[{
+      title:'매치코치 바로가기',
+      link:{ mobileWebUrl:'https://matchcoach.kr', webUrl:'https://matchcoach.kr' }
+    }]
+  });
+  grantShareAccess();
+};
+
+async function grantShareAccess(){
+  try{
+    await setDoc(doc(db,'users',currentUser.uid),{sharedAt:serverTimestamp()},{merge:true});
+    sharedAt={seconds:Math.floor(Date.now()/1000)};
+    updateAccessState();
+    showToast('✅ 24시간 열람권 획득!');
+    closeModal('shareGateModal');
+    if(pendingDetailId){
+      const id=pendingDetailId; pendingDetailId=null;
+      openDetail(id);
+    }
+  }catch(e){showToast('열람권 저장 실패: '+e.message);}
+}
 
 window.signInWithGoogle=async()=>{try{await signInWithPopup(auth,provider);}catch(e){showToast('로그인 실패: '+e.message);}};
 window.signOut=async()=>{await fbSignOut(auth);showToast('로그아웃 되었습니다');};
@@ -1041,6 +1120,11 @@ window.deleteCoach=async id=>{
 window.openContact=id=>{
   const c=coaches.find(x=>x.id===id);
   if(!c)return;
+  if(c.authorUid!==currentUser?.uid && !hasAccess){
+    pendingDetailId=id;
+    document.getElementById('shareGateModal').classList.add('on');
+    return;
+  }
   if(c.contactType==='phone'){window.open('tel:'+c.contactVal.replace(/-/g,''));}
   else if(c.contactVal){window.open(c.contactVal.startsWith('http')?c.contactVal:'https://'+c.contactVal,'_blank');}
 };
@@ -1048,6 +1132,12 @@ window.openContact=id=>{
 window.openDetail=async id=>{
   const c=coaches.find(x=>x.id===id);
   if(!c)return;
+  // 내 글이 아니고 열람권이 없으면 상세보기 대신 공유 유도 모달
+  if(c.authorUid!==currentUser?.uid && !hasAccess){
+    pendingDetailId=id;
+    document.getElementById('shareGateModal').classList.add('on');
+    return;
+  }
   // 조회수 증가 (본인 글 제외)
   if(c.authorUid !== currentUser?.uid){
     try{
@@ -1216,7 +1306,7 @@ function resetModalRegion(){
 }
 
 document.getElementById('searchInput').addEventListener('input',e=>{searchQuery=e.target.value;render();});
-['editModal','detailModal'].forEach(id=>{
+['editModal','detailModal','shareGateModal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal(id);});
 });
 
