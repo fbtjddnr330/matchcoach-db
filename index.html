@@ -146,10 +146,21 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
 .chip-btn{padding:9px 16px;border-radius:20px;border:1.5px solid #E5E7EB;background:white;font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:#374151;transition:all 0.12s;}
 .chip-btn:hover{border-color:#0062FF;}
 .chip-btn.active{background:#0062FF;color:white;border-color:#0062FF;}
-.age-range-row{display:flex;align-items:center;gap:8px;}
-.age-range-row input{width:70px;padding:9px 10px;border-radius:8px;border:1.5px solid #E5E7EB;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;color:#111827;}
-.age-range-row input:focus{border-color:#0062FF;}
-.age-range-row span{font-size:13px;color:#6B7280;}
+.age-range-row{display:flex;flex-direction:column;gap:10px;}
+.age-slider-value{font-size:14px;font-weight:700;color:#0062FF;text-align:center;}
+.age-slider-track{position:relative;height:32px;padding:0 9px;}
+.age-slider-track::before{content:'';position:absolute;top:50%;left:9px;right:9px;height:4px;background:#E5E7EB;border-radius:2px;transform:translateY(-50%);}
+.age-slider-range{position:absolute;top:50%;height:4px;background:#0062FF;border-radius:2px;transform:translateY(-50%);}
+.age-slider-track input[type="range"]{position:absolute;top:0;left:0;width:100%;height:32px;margin:0;background:none;-webkit-appearance:none;appearance:none;pointer-events:none;}
+.age-slider-track input[type="range"]::-webkit-slider-runnable-track{background:transparent;}
+.age-slider-track input[type="range"]::-moz-range-track{background:transparent;}
+.age-slider-track input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;pointer-events:auto;width:18px;height:18px;border-radius:50%;background:#0062FF;border:3px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.35);cursor:pointer;margin-top:0;}
+.age-slider-track input[type="range"]::-moz-range-thumb{pointer-events:auto;width:18px;height:18px;border-radius:50%;background:#0062FF;border:3px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.35);cursor:pointer;}
+.age-slider-track.disabled{opacity:0.4;}
+.age-slider-track.disabled input[type="range"]{pointer-events:none;}
+.age-any-row{display:flex;align-items:center;gap:6px;font-size:12px;color:#374151;}
+.age-any-row input{width:15px;height:15px;cursor:pointer;accent-color:#0062FF;}
+.age-any-row label{cursor:pointer;}
 
 /* 지역 입력 */
 .region-box{border:1.5px solid #E5E7EB;border-radius:8px;padding:8px 10px;transition:border-color 0.15s;}
@@ -410,10 +421,18 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
         <div class="fg"><label id="lbl_age">나이</label>
           <input type="number" id="f_age" class="mode-available" placeholder="28" min="18" max="80">
           <div id="ageRangeRow" class="age-range-row mode-seeking" style="display:none;">
-            <input type="number" id="f_age_min" placeholder="20" min="18" max="80">
-            <span>~</span>
-            <input type="number" id="f_age_max" placeholder="40" min="18" max="80">
-            <span>세</span>
+            <div class="age-slider-value" id="ageSliderValue">20세 ~ 60세</div>
+            <div class="age-slider-track" id="ageSliderTrack">
+              <div class="age-slider-range" id="ageSliderRange"></div>
+              <input type="range" id="f_age_min_slider" min="18" max="70" step="1" value="20" oninput="onAgeSliderChange('min')">
+              <input type="range" id="f_age_max_slider" min="18" max="70" step="1" value="60" oninput="onAgeSliderChange('max')">
+            </div>
+            <div class="age-any-row">
+              <input type="checkbox" id="f_age_any" onchange="onAgeAnyToggle()">
+              <label for="f_age_any">무관</label>
+            </div>
+            <input type="hidden" id="f_age_min">
+            <input type="hidden" id="f_age_max">
           </div>
         </div>
         <div class="fg"><label id="lbl_career">경력</label>
@@ -557,6 +576,55 @@ window.pickChip=(hiddenId,groupId,btn)=>{
 }
 function highlightChip(groupId,value){
   document.querySelectorAll('#'+groupId+' .chip-btn').forEach(b=>b.classList.toggle('active',b.dataset.val===value));
+}
+const AGE_SLIDER_MIN=18, AGE_SLIDER_MAX=70;
+window.onAgeSliderChange=(which)=>{
+  const minEl=document.getElementById('f_age_min_slider');
+  const maxEl=document.getElementById('f_age_max_slider');
+  let minV=parseInt(minEl.value), maxV=parseInt(maxEl.value);
+  if(minV>maxV){
+    if(which==='min'){maxV=minV;maxEl.value=maxV;}else{minV=maxV;minEl.value=minV;}
+  }
+  document.getElementById('f_age_min').value=minV;
+  document.getElementById('f_age_max').value=maxV;
+  if(!document.getElementById('f_age_any').checked){
+    document.getElementById('ageSliderValue').textContent=`${minV}세 ~ ${maxV}세`;
+  }
+  const leftPct=((minV-AGE_SLIDER_MIN)/(AGE_SLIDER_MAX-AGE_SLIDER_MIN))*100;
+  const rightPct=((maxV-AGE_SLIDER_MIN)/(AGE_SLIDER_MAX-AGE_SLIDER_MIN))*100;
+  const range=document.getElementById('ageSliderRange');
+  range.style.left=leftPct+'%';
+  range.style.width=(rightPct-leftPct)+'%';
+  const mid=AGE_SLIDER_MIN+(AGE_SLIDER_MAX-AGE_SLIDER_MIN)/2;
+  minEl.style.zIndex=minV>mid?3:2;
+  maxEl.style.zIndex=minV>mid?2:3;
+};
+window.onAgeAnyToggle=()=>{
+  const any=document.getElementById('f_age_any').checked;
+  document.getElementById('ageSliderTrack').classList.toggle('disabled',any);
+  document.getElementById('f_age_min_slider').disabled=any;
+  document.getElementById('f_age_max_slider').disabled=any;
+  document.getElementById('ageSliderValue').textContent=any
+    ?'나이 무관'
+    :`${document.getElementById('f_age_min_slider').value}세 ~ ${document.getElementById('f_age_max_slider').value}세`;
+};
+function setAgeSlider(minV,maxV,any){
+  document.getElementById('f_age_min_slider').value=minV??20;
+  document.getElementById('f_age_max_slider').value=maxV??60;
+  document.getElementById('f_age_any').checked=!!any;
+  onAgeSliderChange('min');
+  onAgeAnyToggle();
+}
+function formatAgePref(c){
+  if(c.ageAny)return'나이 무관';
+  if(c.ageMin!=null&&c.ageMax!=null)return`${c.ageMin}세 ~ ${c.ageMax}세`;
+  const ageStr=(c.age||'').toString();
+  if(ageStr==='무관')return'나이 무관';
+  if(ageStr.includes('~')){
+    const[mn,mx]=ageStr.split('~');
+    return mn&&mx?`${mn}세 ~ ${mx}세`:'';
+  }
+  return'';
 }
 function setModeVisibility(status){
   const seeking=status==='seeking';
@@ -816,6 +884,7 @@ window.openAddModal=(preStatus)=>{
   document.querySelectorAll('#genderChips .chip-btn, #careerChips .chip-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('f_category').value='';
   document.getElementById('f_contact_type').value='kakao';
+  setAgeSlider(20,60,false);
   applyFormLabels(preStatus);
   renderSportTags(); renderRegionAdded(); resetModalRegion();
   document.getElementById('editModal').classList.add('on');
@@ -834,10 +903,21 @@ window.openEdit=id=>{
     highlightChip('genderChips',c.gender||'');
     document.getElementById('f_career_h').value=c.career||'';
     highlightChip('careerChips',c.career||'');
-    const ageStr=(c.age||'').toString();
-    const [ageMin,ageMax]=ageStr.includes('~')?ageStr.split('~'):[ageStr,''];
-    document.getElementById('f_age_min').value=ageMin||'';
-    document.getElementById('f_age_max').value=ageMax||'';
+    if(c.ageAny){
+      setAgeSlider(c.ageMin??20,c.ageMax??60,true);
+    }else if(c.ageMin!=null||c.ageMax!=null){
+      setAgeSlider(c.ageMin??20,c.ageMax??60,false);
+    }else{
+      const ageStr=(c.age||'').toString();
+      if(ageStr==='무관'){
+        setAgeSlider(20,60,true);
+      }else if(ageStr.includes('~')){
+        const [mn,mx]=ageStr.split('~').map(v=>parseInt(v));
+        setAgeSlider(mn||20,mx||60,false);
+      }else{
+        setAgeSlider(20,60,false);
+      }
+    }
   }else{
     document.getElementById('f_gender').value=c.gender||'';
     document.getElementById('f_age').value=c.age||'';
@@ -865,13 +945,18 @@ window.saveCoach=async()=>{
   if(regionList.length===0){showToast('출강 가능 지역을 추가해주세요');return;}
   const status=document.getElementById('f_status').value;
   const isSeeking=status==='seeking';
-  let gender,age,career;
+  let gender,age,career,ageMin=null,ageMax=null,ageAny=false;
   if(isSeeking){
     gender=document.getElementById('f_gender_h').value;
     career=document.getElementById('f_career_h').value;
-    const ageMin=document.getElementById('f_age_min').value;
-    const ageMax=document.getElementById('f_age_max').value;
-    age=ageMin&&ageMax?`${ageMin}~${ageMax}`:(ageMin||ageMax||'');
+    ageAny=document.getElementById('f_age_any').checked;
+    if(ageAny){
+      age='무관';
+    }else{
+      ageMin=parseInt(document.getElementById('f_age_min').value);
+      ageMax=parseInt(document.getElementById('f_age_max').value);
+      age=`${ageMin}~${ageMax}`;
+    }
   }else{
     gender=document.getElementById('f_gender').value;
     career=document.getElementById('f_career').value.trim();
@@ -881,6 +966,9 @@ window.saveCoach=async()=>{
     name,
     gender,
     age,
+    ageMin,
+    ageMax,
+    ageAny,
     status,
     career,
     cert:document.getElementById('f_cert').value.trim(),
@@ -951,6 +1039,7 @@ window.openDetail=async id=>{
           <div><div class="detail-lbl">${ctLabel}</div><div class="detail-val" style="font-size:12px;word-break:break-all;${c.contactVal?'color:#0062FF;cursor:pointer;text-decoration:underline;':''}" ${c.contactVal?`onclick="openContact('${c.id}')"`:''}>${c.contactVal||'-'}</div></div>
           <div><div class="detail-lbl">자격증</div><div class="detail-val" style="font-size:12px;">${c.cert||'-'}</div></div>
           <div><div class="detail-lbl">희망 급여</div><div class="detail-val" style="font-size:12px;">${c.salary||'협의'}</div></div>
+          ${c.status==='seeking'&&formatAgePref(c)?`<div><div class="detail-lbl">선호 연령대</div><div class="detail-val" style="font-size:12px;">${formatAgePref(c)}</div></div>`:''}
         </div>
       </div>
       ${c.bio?`<div class="detail-sec"><div class="detail-lbl">소개</div><div style="font-size:13px;line-height:1.7;color:#374151;">${c.bio}</div></div>`:''}
