@@ -44,6 +44,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
 
 /* NOTICE BANNER */
 .notice-banner{background:#EFF6FF;color:#1D4ED8;font-size:12px;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:12px;text-align:center;}
+.notice-banner .notice-text{display:flex;flex-direction:column;gap:3px;}
 .notice-banner .notice-close{background:none;border:none;color:#1D4ED8;font-size:14px;line-height:1;cursor:pointer;flex-shrink:0;padding:2px;}
 
 /* LAYOUT */
@@ -195,6 +196,10 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
   .tab-btn.on{color:#111827;font-weight:700;border-bottom:2px solid #0062FF;}
   .date-txt{font-size:10px;color:#D1D5DB;margin-top:2px;font-weight:400;}
   .tbl-row.blinded{opacity:0.4;pointer-events:none;}
+  .g-card.blinded{opacity:0.4;pointer-events:none;}
+  .tbl-row.old-post:not(.blinded){opacity:0.55;}
+  .g-card.old-post:not(.blinded){opacity:0.55;}
+  .badge-old{display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;color:#B45309;background:#FEF3C7;padding:1px 6px;border-radius:8px;margin-left:4px;cursor:help;white-space:nowrap;}
   .admin-wrap{background:white;border-radius:10px;border:1px solid #E5E7EB;overflow:hidden;}
   .admin-head{padding:14px 18px;background:#0F1B2D;color:white;font-size:14px;font-weight:700;}
   .admin-row{display:grid;grid-template-columns:1fr 80px 80px 120px;padding:10px 18px;border-bottom:1px solid #F3F4F6;align-items:center;gap:8px;font-size:12px;}
@@ -278,7 +283,10 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
   </header>
 
   <div class="notice-banner" id="noticeBanner">
-    <span>📌 등록 후 30일이 지난 글은 자동으로 흐려집니다. 갱신하기 버튼으로 유지해주세요.</span>
+    <div class="notice-text">
+      <div>📌 등록 후 30일이 지난 글은 자동으로 흐려집니다. '갱신' 버튼으로 유지해주세요.</div>
+      <div>🚩 신고가 <span id="reportThresholdText">5</span>회 누적되면 자동으로 가려지며, 관리자 확인 후 조치됩니다.</div>
+    </div>
     <button class="notice-close" onclick="closeNoticeBanner()">✕</button>
   </div>
 
@@ -520,7 +528,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc,
-  query, orderBy, serverTimestamp, increment, where, getDoc }
+  query, orderBy, serverTimestamp, increment, where, getDoc, arrayUnion }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const fbConfig = {
@@ -542,6 +550,7 @@ document.getElementById('headerLogo').src = LOGO;
 
 const MAIN_SPORTS = ['축구','농구','줄넘기','배드민턴','클라이밍','댄스','피트니스','수영','테니스','태권도','복싱','아크로바틱','요가','필라테스'];
 const ADMIN_UID = 'd7QYShvsv9WihlczimfuIndo41s2';
+const REPORT_THRESHOLD = 5;
 const CONTACT_LABELS = {kakao:'카카오 오픈채팅',insta:'인스타그램',email:'이메일',phone:'전화번호',other:'링크'};
 const STATUS_MAP = {available:{label:'구직중',cls:'seek'},seeking:{label:'채용중',cls:'hire'}};
 
@@ -759,7 +768,7 @@ function getFiltered(){
     if(statusOn.length&&!statusOn.includes(c.status))return false;
     if(genderOn.length&&!genderOn.includes(c.gender))return false;
     if(ageOn.length&&!ageOn.includes(getAgeGroup(c.age)))return false;
-    if(sportOn.length&&!sportOn.some(s=>(c.sports||[]).some(cs=>cs.includes(s)||s.includes(cs))))return false;
+    if(sportOn.length&&!sportOn.every(s=>(c.sports||[]).some(cs=>cs.includes(s)||s.includes(cs))))return false;
     if(sido){
       const match=(c.regions||[]).some(r=>{
         if(!r.includes(sido))return false;
@@ -806,7 +815,7 @@ function render(){
       const blinded=c.blinded||false;
       const actions=isMine
         ?`` 
-        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded&&!isMine?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="신고" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:12px;">🚩</button>`:''}`;
+        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded&&!isMine?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="부적절한 글을 신고합니다" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:11px;white-space:nowrap;">🚩 신고</button>`:''}`;
 
       const bg=idx%2===0?'background:white;':'background:#FAFAFA;';
       const rowCls=`tbl-row${isMine?' mine':''}${blinded?' blinded':''}${old?' old-post':''}`;
@@ -814,7 +823,7 @@ function render(){
         <div class="cell-profile">
           <div class="av" style="background:${color}">${avInner}</div>
           <div style="min-width:0;">
-            <div class="name-txt">${c.name}${isMine?'<span style="font-size:9px;color:#0062FF;margin-left:4px;">내글</span>':''}${old?'<span style="font-size:9px;color:#F59E0B;margin-left:4px;">· 30일+</span>':''}</div>
+            <div class="name-txt">${c.name}${isMine?'<span style="font-size:9px;color:#0062FF;margin-left:4px;">내글</span>':''}${old?`<span class="badge-old" title="등록 후 30일이 지나 흐리게 표시돼요. ${isMine?'\'갱신\' 버튼을 누르면 다시 선명해져요.':'작성자가 갱신하면 다시 선명해져요.'}">⏰ 갱신 필요</span>`:''}</div>
             <div class="sub-txt">${c.gender||'-'} · ${c.age?c.age+'세':'-'} · ${c.career||'-'}</div>
             <div class="date-txt">${dateStr}${c.viewCount?` · 조회 ${c.viewCount}`:''}</div>
           </div>
@@ -838,14 +847,15 @@ function render(){
       const vis=(c.sports||[]).slice(0,3); const extra=(c.sports||[]).length-3;
       const sportHtml=vis.map(s=>`<span class="s-tag">#${s}</span>`).join('')+(extra>0?`<span class="s-more">+${extra}</span>`:'');
       const blinded=c.blinded||false;
+      const old=isOldPost(c.createdAt);
       const actions=isMine
         ?''
-        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="신고" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:12px;">🚩</button>`:''}`;
-      return `<div class="g-card${isMine?' mine':''}" onclick="openDetail('${c.id}')">
+        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="부적절한 글을 신고합니다" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:11px;white-space:nowrap;">🚩 신고</button>`:''}`;
+      return `<div class="g-card${isMine?' mine':''}${blinded?' blinded':''}${old?' old-post':''}" onclick="openDetail('${c.id}')">
         <div class="g-card-top">
           <div class="av" style="background:${color}">${avInner}</div>
           <div style="min-width:0;flex:1;">
-            <div class="name-txt">${c.name}</div>
+            <div class="name-txt">${c.name}${old?`<span class="badge-old" title="등록 후 30일이 지나 흐리게 표시돼요. ${isMine?'\'갱신\' 버튼을 누르면 다시 선명해져요.':'작성자가 갱신하면 다시 선명해져요.'}">⏰ 갱신 필요</span>`:''}</div>
             <div class="sub-txt">${c.gender||'-'} · ${c.age?c.age+'세':'-'}</div>
           </div>
           <span class="badge ${st.cls}"><span class="bdot"></span>${st.label}</span>
@@ -1060,6 +1070,10 @@ window.closeNoticeBanner=()=>{
   document.getElementById('noticeBanner').style.display='none';
   localStorage.setItem('noticeBannerClosed','1');
 };
+{
+  const rt=document.getElementById('reportThresholdText');
+  if(rt)rt.textContent=REPORT_THRESHOLD;
+}
 if(localStorage.getItem('noticeBannerClosed')==='1'){
   const nb=document.getElementById('noticeBanner');
   if(nb)nb.style.display='none';
@@ -1181,21 +1195,20 @@ document.getElementById('searchInput').addEventListener('input',e=>{searchQuery=
 window.reportPost=async id=>{
   const c=coaches.find(x=>x.id===id);
   if(!c||c.authorUid===currentUser?.uid){showToast('본인 글은 신고할 수 없어요');return;}
-  if(!confirm('이 글을 신고하시겠습니까?\n허위 또는 부적절한 글만 신고해주세요.')){return;}
+  if((c.reportedBy||[]).includes(currentUser.uid)){showToast('이미 신고한 글이에요');return;}
+  if(!confirm(`이 글을 신고하시겠습니까?\n허위 또는 부적절한 글만 신고해주세요.\n신고가 ${REPORT_THRESHOLD}회 누적되면 자동으로 가려지고 관리자 확인 후 조치됩니다.`)){return;}
   try{
-    const myReports=JSON.parse(localStorage.getItem('reported')||'[]');
-    if(myReports.includes(id)){showToast('이미 신고한 글이에요');return;}
     const newCnt=(c.reportCount||0)+1;
-    const shouldBlind=newCnt>=3;
+    const shouldBlind=newCnt>=REPORT_THRESHOLD;
     await updateDoc(doc(db,'coaches',id),{
       reportCount:increment(1),
+      reportedBy:arrayUnion(currentUser.uid),
       blinded:shouldBlind
     });
-    myReports.push(id);
-    localStorage.setItem('reported',JSON.stringify(myReports));
     c.reportCount=newCnt;
+    c.reportedBy=[...(c.reportedBy||[]),currentUser.uid];
     if(shouldBlind){c.blinded=true;}
-    showToast(shouldBlind?'신고 3회 누적으로 블라인드 처리됐습니다':'신고가 접수됐습니다');
+    showToast(shouldBlind?`신고 ${REPORT_THRESHOLD}회 누적으로 블라인드 처리됐습니다`:'신고가 접수됐습니다');
     render();
     closeModal('detailModal');
   }catch(e){showToast('신고 실패: '+e.message);}
@@ -1240,7 +1253,7 @@ async function renderAdmin(){
         <div style="font-size:11px;color:#9CA3AF;">${formatDate(c.createdAt)}</div>
       </div>
       <div style="text-align:center;">
-        <span style="font-size:13px;font-weight:700;color:${(c.reportCount||0)>=3?'#DC2626':'#B45309'};">🚩 ${c.reportCount||0}회</span>
+        <span style="font-size:13px;font-weight:700;color:${(c.reportCount||0)>=REPORT_THRESHOLD?'#DC2626':'#B45309'};">🚩 ${c.reportCount||0}회 / ${REPORT_THRESHOLD}회</span>
       </div>
       <div style="text-align:center;">
         <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${c.blinded?'#FEE2E2':'#DCFCE7'};color:${c.blinded?'#DC2626':'#15803D'};">${c.blinded?'블라인드':'정상'}</span>
@@ -1264,7 +1277,7 @@ async function renderAdmin(){
 
 window.adminUnblind=async id=>{
   if(currentUser?.uid!==ADMIN_UID)return;
-  await updateDoc(doc(db,'coaches',id),{blinded:false,reportCount:0});
+  await updateDoc(doc(db,'coaches',id),{blinded:false,reportCount:0,reportedBy:[]});
   showToast('✅ 블라인드 해제됐습니다');
   await loadCoaches();
   renderAdmin();
