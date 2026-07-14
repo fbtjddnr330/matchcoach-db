@@ -551,6 +551,7 @@ document.getElementById('headerLogo').src = LOGO;
 const MAIN_SPORTS = ['축구','농구','줄넘기','배드민턴','클라이밍','댄스','피트니스','수영','테니스','태권도','복싱','아크로바틱','요가','필라테스'];
 const ADMIN_UID = 'd7QYShvsv9WihlczimfuIndo41s2';
 const REPORT_THRESHOLD = 5;
+const COMPLETION_THRESHOLD = 3;
 const CONTACT_LABELS = {kakao:'카카오 오픈채팅',insta:'인스타그램',email:'이메일',phone:'전화번호',other:'링크'};
 const STATUS_MAP = {available:{label:'구직중',cls:'seek'},seeking:{label:'채용중',cls:'hire'}};
 
@@ -703,16 +704,18 @@ function updateStats(){
   document.getElementById('hiringCount').textContent=coaches.filter(c=>c.status==='seeking').length;
   document.getElementById('cnt_seek').textContent=coaches.filter(c=>c.status==='available').length;
   document.getElementById('cnt_hire').textContent=coaches.filter(c=>c.status==='seeking').length;
-  checkBlindedNotif();
+  checkAdminNotif();
 }
 
-// ── 블라인드 처리 알림 배지 (관리자 탭) ──
-function checkBlindedNotif(){
+// ── 블라인드/완료 처리 알림 배지 (관리자 탭) ──
+function checkAdminNotif(){
   const tabBtn=document.getElementById('tab_admin');
   if(!tabBtn||currentUser?.uid!==ADMIN_UID)return;
-  const seen=JSON.parse(localStorage.getItem('seenBlindedIds')||'[]');
+  const seenBlinded=JSON.parse(localStorage.getItem('seenBlindedIds')||'[]');
+  const seenCompleted=JSON.parse(localStorage.getItem('seenCompletedIds')||'[]');
   const blindedIds=coaches.filter(c=>c.blinded).map(c=>c.id);
-  const hasNew=blindedIds.some(id=>!seen.includes(id));
+  const completedIds=coaches.filter(c=>c.completed).map(c=>c.id);
+  const hasNew=blindedIds.some(id=>!seenBlinded.includes(id))||completedIds.some(id=>!seenCompleted.includes(id));
   let dot=document.getElementById('adminNotifDot');
   if(hasNew){
     if(!dot){
@@ -725,9 +728,10 @@ function checkBlindedNotif(){
     dot.remove();
   }
 }
-function markBlindedSeen(){
+function markAdminNotifSeen(){
   localStorage.setItem('seenBlindedIds',JSON.stringify(coaches.filter(c=>c.blinded).map(c=>c.id)));
-  checkBlindedNotif();
+  localStorage.setItem('seenCompletedIds',JSON.stringify(coaches.filter(c=>c.completed).map(c=>c.id)));
+  checkAdminNotif();
 }
 
 function buildSportFilters(){
@@ -788,8 +792,9 @@ function getFiltered(){
   const {sido,sigungu,dong}=filterRegion;
 
   return coaches.filter(c=>{
-    // 블라인드 글은 관리자와 작성자만 볼 수 있음
+    // 블라인드/완료 처리된 글은 관리자와 작성자만 볼 수 있음
     if(c.blinded && currentUser?.uid!==ADMIN_UID && c.authorUid!==currentUser?.uid) return false;
+    if(c.completed && currentUser?.uid!==ADMIN_UID && c.authorUid!==currentUser?.uid) return false;
     if(statusOn.length&&!statusOn.includes(c.status))return false;
     if(genderOn.length&&!genderOn.includes(c.gender))return false;
     if(ageOn.length&&!ageOn.includes(getAgeGroup(c.age)))return false;
@@ -838,9 +843,10 @@ function render(){
       const old=isOldPost(c.createdAt);
       const reportCnt=c.reportCount||0;
       const blinded=c.blinded||false;
+      const completeLabel=c.status==='seeking'?'채용완료':'구직완료';
       const actions=isMine
-        ?`` 
-        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded&&!isMine?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="부적절한 글을 신고합니다" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:11px;white-space:nowrap;">🚩 신고</button>`:''}`;
+        ?``
+        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded&&!isMine?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="부적절한 글을 신고합니다" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:11px;white-space:nowrap;">🚩 신고</button><button class="btn-report" onclick="event.stopPropagation();markCompleted('${c.id}')" title="이미 ${completeLabel}된 글이라면 표시해주세요" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:11px;white-space:nowrap;">✅ ${completeLabel}</button>`:''}`;
 
       const bg=idx%2===0?'background:white;':'background:#FAFAFA;';
       const rowCls=`tbl-row${isMine?' mine':''}${blinded?' blinded':''}${old?' old-post':''}`;
@@ -873,9 +879,10 @@ function render(){
       const sportHtml=vis.map(s=>`<span class="s-tag">#${s}</span>`).join('')+(extra>0?`<span class="s-more">+${extra}</span>`:'');
       const blinded=c.blinded||false;
       const old=isOldPost(c.createdAt);
+      const completeLabel=c.status==='seeking'?'채용완료':'구직완료';
       const actions=isMine
         ?''
-        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="부적절한 글을 신고합니다" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:11px;white-space:nowrap;">🚩 신고</button>`:''}`;
+        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="부적절한 글을 신고합니다" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:11px;white-space:nowrap;">🚩 신고</button><button class="btn-report" onclick="event.stopPropagation();markCompleted('${c.id}')" title="이미 ${completeLabel}된 글이라면 표시해주세요" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:11px;white-space:nowrap;">✅ ${completeLabel}</button>`:''}`;
       return `<div class="g-card${isMine?' mine':''}${blinded?' blinded':''}${old?' old-post':''}" onclick="openDetail('${c.id}')">
         <div class="g-card-top">
           <div class="av" style="background:${color}">${avInner}</div>
@@ -1055,6 +1062,7 @@ window.openDetail=async id=>{
   const sportHtml=(c.sports||[]).map(s=>`<span class="s-tag">#${s}</span>`).join('');
   const regionHtml=(c.regions||[]).map(r=>`<span style="font-size:11px;background:#F3F4F6;color:#374151;padding:3px 9px;border-radius:6px;">📍 ${r}</span>`).join('');
   const ctLabel=CONTACT_LABELS[c.contactType]||'연락처';
+  const completeLabel=c.status==='seeking'?'채용완료':'구직완료';
   document.getElementById('detailContent').innerHTML=`
     <div class="detail-hero" style="background:linear-gradient(135deg,${color}22,#0F1B2D);">
       <div class="detail-av" style="background:${color}">${avInner}</div>
@@ -1085,6 +1093,7 @@ window.openDetail=async id=>{
           <button class="btn-edit-s" style="flex:1;padding:11px;font-size:13px;border-radius:9px;" onclick="openEdit('${c.id}')">✏️ 수정</button>
           <button class="btn-del-s" style="flex:1;padding:11px;font-size:13px;border-radius:9px;" onclick="deleteCoach('${c.id}')">🗑 삭제</button>`
         :`<button class="btn-contact" style="flex:2;padding:11px;font-size:14px;border-radius:9px;" onclick="openContact('${c.id}')">📞 연락하기</button>
+          <button class="btn-report" style="padding:11px 14px;border-radius:9px;font-size:13px;" onclick="markCompleted('${c.id}')" title="이미 완료된 글이라면 표시해주세요">✅ ${completeLabel}</button>
           <button class="btn-report" style="padding:11px 14px;border-radius:9px;font-size:13px;" onclick="reportPost('${c.id}')" title="신고">🚩 신고</button>`
       }
     </div>`;
@@ -1231,17 +1240,43 @@ window.reportPost=async id=>{
     if(shouldBlind){c.blinded=true;}
     showToast(shouldBlind?'신고 누적으로 블라인드 처리됐습니다':'신고가 접수됐습니다');
     render();
-    checkBlindedNotif();
+    checkAdminNotif();
     closeModal('detailModal');
   }catch(e){showToast('신고 실패: '+e.message);}
 };
 
-// ── 갱신 (30일 리셋) ──
+// ── 구인/구직 완료 표시 ──
+window.markCompleted=async id=>{
+  const c=coaches.find(x=>x.id===id);
+  if(!c||c.authorUid===currentUser?.uid){showToast('본인 글은 표시할 수 없어요');return;}
+  if((c.completedBy||[]).includes(currentUser.uid)){showToast('이미 표시한 글이에요');return;}
+  const label=c.status==='seeking'?'채용':'구직';
+  if(!confirm(`이 글이 이미 ${label} 완료된 것 같나요?\n여러 명이 표시하면 자동으로 목록에서 내려가요.`)){return;}
+  try{
+    const newCnt=(c.completedCount||0)+1;
+    const shouldComplete=newCnt>=COMPLETION_THRESHOLD;
+    await updateDoc(doc(db,'coaches',id),{
+      completedCount:increment(1),
+      completedBy:arrayUnion(currentUser.uid),
+      completed:shouldComplete
+    });
+    c.completedCount=newCnt;
+    c.completedBy=[...(c.completedBy||[]),currentUser.uid];
+    if(shouldComplete){c.completed=true;}
+    showToast(shouldComplete?`${label} 완료로 표시되어 목록에서 내려갔습니다`:'의견이 접수됐습니다');
+    render();
+    checkAdminNotif();
+    closeModal('detailModal');
+  }catch(e){showToast('처리 실패: '+e.message);}
+};
+
+// ── 갱신 (30일 리셋, 완료/신고 표시 초기화) ──
 window.renewPost=async id=>{
   const c=coaches.find(x=>x.id===id);
   if(!c||c.authorUid!==currentUser?.uid)return;
   try{
-    await updateDoc(doc(db,'coaches',id),{createdAt:serverTimestamp()});
+    await updateDoc(doc(db,'coaches',id),{createdAt:serverTimestamp(),completed:false,completedCount:0,completedBy:[]});
+    c.completed=false;c.completedCount=0;c.completedBy=[];
     showToast('✅ 글이 갱신됐습니다');
     await loadCoaches();
   }catch(e){showToast('갱신 실패');}
@@ -1254,7 +1289,7 @@ window.switchTab=tab=>{
     const el=document.getElementById('tab_'+t);
     if(el) el.classList.toggle('on',t===tab);
   });
-  if(tab==='admin'){renderAdmin();markBlindedSeen();}
+  if(tab==='admin'){renderAdmin();markAdminNotifSeen();}
   else{render();}
 };
 
@@ -1263,11 +1298,9 @@ async function renderAdmin(){
   if(currentUser?.uid!==ADMIN_UID)return;
   const el=document.getElementById('mainContent');
   const reported=coaches.filter(c=>(c.reportCount||0)>0||c.blinded).sort((a,b)=>(b.reportCount||0)-(a.reportCount||0));
-  if(!reported.length){
-    el.innerHTML=`<div class="admin-wrap"><div class="admin-head">🛡 관리자 — 신고 현황</div><div style="padding:24px;text-align:center;color:#9CA3AF;font-size:13px;">신고된 글이 없습니다 ✅</div></div>`;
-    return;
-  }
-  const rows=reported.map(c=>`
+  const completedList=coaches.filter(c=>(c.completedCount||0)>0||c.completed).sort((a,b)=>(b.completedCount||0)-(a.completedCount||0));
+
+  const reportRows=reported.map(c=>`
     <div class="admin-row">
       <div>
         <div style="font-size:13px;font-weight:600;">${c.name}</div>
@@ -1285,33 +1318,73 @@ async function renderAdmin(){
         <button class="btn-admin-del" onclick="adminDelete('${c.id}')">삭제</button>
       </div>
     </div>`).join('');
-  el.innerHTML=`<div class="admin-wrap">
-    <div class="admin-head">🛡 관리자 — 신고 현황 (${reported.length}건)</div>
-    <div style="display:grid;grid-template-columns:1fr 80px 80px 120px;padding:8px 18px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;">
+
+  const completedRows=completedList.map(c=>`
+    <div class="admin-row">
+      <div>
+        <div style="font-size:13px;font-weight:600;">${c.name}</div>
+        <div style="font-size:11px;color:#9CA3AF;">${(c.sports||[]).map(s=>'#'+s).join(' ')} · ${c.authorName||''}</div>
+        <div style="font-size:11px;color:#9CA3AF;">${formatDate(c.createdAt)}</div>
+      </div>
+      <div style="text-align:center;">
+        <span style="font-size:13px;font-weight:700;color:${(c.completedCount||0)>=COMPLETION_THRESHOLD?'#DC2626':'#B45309'};">✅ ${c.completedCount||0}회 / ${COMPLETION_THRESHOLD}회</span>
+      </div>
+      <div style="text-align:center;">
+        <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${c.completed?'#FEE2E2':'#DCFCE7'};color:${c.completed?'#DC2626':'#15803D'};">${c.completed?'완료(숨김)':'정상'}</span>
+      </div>
+      <div style="display:flex;gap:5px;justify-content:flex-end;">
+        ${c.completed?`<button class="btn-admin-unblind" onclick="adminUncomplete('${c.id}')">되돌리기</button>`:''}
+        <button class="btn-admin-del" onclick="adminDelete('${c.id}')">삭제</button>
+      </div>
+    </div>`).join('');
+
+  const tableHead=`<div style="display:grid;grid-template-columns:1fr 80px 80px 120px;padding:8px 18px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;">
       <span style="font-size:10px;font-weight:700;color:#9CA3AF;">글 정보</span>
-      <span style="font-size:10px;font-weight:700;color:#9CA3AF;text-align:center;">신고수</span>
+      <span style="font-size:10px;font-weight:700;color:#9CA3AF;text-align:center;">횟수</span>
       <span style="font-size:10px;font-weight:700;color:#9CA3AF;text-align:center;">상태</span>
       <span style="font-size:10px;font-weight:700;color:#9CA3AF;text-align:right;">액션</span>
+    </div>`;
+
+  el.innerHTML=`
+    <div class="admin-wrap" style="margin-bottom:16px;">
+      <div class="admin-head">🚩 신고 현황 (${reported.length}건)</div>
+      ${reported.length?tableHead+reportRows:`<div style="padding:24px;text-align:center;color:#9CA3AF;font-size:13px;">신고된 글이 없습니다 ✅</div>`}
     </div>
-    ${rows}
-  </div>`;
+    <div class="admin-wrap">
+      <div class="admin-head">✅ 완료 표시 현황 (${completedList.length}건)</div>
+      ${completedList.length?tableHead+completedRows:`<div style="padding:24px;text-align:center;color:#9CA3AF;font-size:13px;">완료 표시된 글이 없습니다</div>`}
+    </div>`;
 }
+
+window.adminUncomplete=async id=>{
+  if(currentUser?.uid!==ADMIN_UID)return;
+  try{
+    await updateDoc(doc(db,'coaches',id),{completed:false,completedCount:0,completedBy:[]});
+    showToast('✅ 목록에 다시 노출됩니다');
+    await loadCoaches();
+    renderAdmin();
+  }catch(e){showToast('처리 실패: '+e.message);}
+};
 
 window.adminUnblind=async id=>{
   if(currentUser?.uid!==ADMIN_UID)return;
-  await updateDoc(doc(db,'coaches',id),{blinded:false,reportCount:0,reportedBy:[]});
-  showToast('✅ 블라인드 해제됐습니다');
-  await loadCoaches();
-  renderAdmin();
+  try{
+    await updateDoc(doc(db,'coaches',id),{blinded:false,reportCount:0,reportedBy:[]});
+    showToast('✅ 블라인드 해제됐습니다');
+    await loadCoaches();
+    renderAdmin();
+  }catch(e){showToast('복구 실패: '+e.message);}
 };
 
 window.adminDelete=async id=>{
   if(currentUser?.uid!==ADMIN_UID)return;
   if(!confirm('이 글을 완전히 삭제하시겠습니까?'))return;
-  await deleteDoc(doc(db,'coaches',id));
-  showToast('🗑 글이 삭제됐습니다');
-  await loadCoaches();
-  renderAdmin();
+  try{
+    await deleteDoc(doc(db,'coaches',id));
+    showToast('🗑 글이 삭제됐습니다');
+    await loadCoaches();
+    renderAdmin();
+  }catch(e){showToast('삭제 실패: '+e.message);}
 };
 
 
