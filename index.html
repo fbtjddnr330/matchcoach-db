@@ -42,6 +42,10 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
 .r-sel{font-size:12px;border:1px solid #E5E7EB;border-radius:7px;padding:7px 10px;background:white;color:#374151;outline:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
 .btn-add{display:flex;align-items:center;gap:6px;background:#0062FF;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;}
 
+/* NOTICE BANNER */
+.notice-banner{background:#EFF6FF;color:#1D4ED8;font-size:12px;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:12px;text-align:center;}
+.notice-banner .notice-close{background:none;border:none;color:#1D4ED8;font-size:14px;line-height:1;cursor:pointer;flex-shrink:0;padding:2px;}
+
 /* LAYOUT */
 .layout{max-width:1400px;margin:0 auto;padding:16px 20px 60px;display:flex;gap:16px;align-items:flex-start;}
 
@@ -262,6 +266,11 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
     </div>
   </header>
 
+  <div class="notice-banner" id="noticeBanner">
+    <span>📌 등록 후 30일이 지난 글은 자동으로 흐려집니다. 갱신하기 버튼으로 유지해주세요.</span>
+    <button class="notice-close" onclick="closeNoticeBanner()">✕</button>
+  </div>
+
   <div class="topbar">
     <div class="topbar-inner">
       <div class="search-wrap">
@@ -422,8 +431,6 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
             <option value="seeking">채용중 (강사 모집 중)</option>
           </select>
         </div>
-        <div class="fg"><label id="lbl_cert">자격증</label><input type="text" id="f_cert" placeholder="생활스포츠지도사 2급"></div>
-        <div class="fg"><label id="lbl_salary">희망 급여</label><input type="text" id="f_salary" placeholder="월 250만원 / 협의"></div>
         <div class="fg"><label>종목 대분류</label>
           <select id="f_category">
             <option value="">선택</option>
@@ -441,6 +448,8 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
             <input type="text" id="sportTagInput" placeholder="#축구  #댄스 ..." maxlength="20">
           </div>
         </div>
+        <div class="fg"><label id="lbl_cert">자격증</label><input type="text" id="f_cert" placeholder="생활스포츠지도사 2급"></div>
+        <div class="fg"><label id="lbl_salary">희망 급여</label><input type="text" id="f_salary" placeholder="월 250만원 / 협의"></div>
         <div class="fg full">
           <label>연락 방법 *</label>
           <div class="contact-row">
@@ -469,7 +478,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
         </div>
         <div class="fg full">
           <label id="lbl_bio">소개 / 글 내용</label>
-          <textarea id="f_bio" placeholder="경력, 전문 분야, 희망 근무 조건 등을 자유롭게 작성해주세요"></textarea>
+          <textarea id="f_bio" placeholder="경력, 희망 조건 등 자유롭게 적어주세요"></textarea>
         </div>
       </div>
       <div class="mo-footer">
@@ -527,7 +536,7 @@ const FORM_LABELS = {
     salary:{label:'희망 급여',ph:'월 250만원 / 협의'},
     sports:{label:'지도 종목 * (Enter로 추가 — #축구 #줄넘기 등 자유롭게)'},
     region:{label:'출강 가능 지역 * (여러 지역 추가 가능)'},
-    bio:{label:'소개 / 글 내용',ph:'경력, 전문 분야, 희망 근무 조건 등을 자유롭게 작성해주세요'}
+    bio:{label:'소개 / 글 내용',ph:'경력, 희망 조건 등 자유롭게 적어주세요'}
   },
   seeking:{
     name:{label:'센터명 또는 담당자명 *',ph:'OO스포츠센터'},
@@ -939,10 +948,9 @@ window.openDetail=async id=>{
       <div class="detail-sec">
         <div class="detail-lbl">기본 정보</div>
         <div class="detail-grid">
-          <div><div class="detail-lbl">${ctLabel}</div><div class="detail-val" style="font-size:12px;word-break:break-all;">${c.contactVal||'-'}</div></div>
+          <div><div class="detail-lbl">${ctLabel}</div><div class="detail-val" style="font-size:12px;word-break:break-all;${c.contactVal?'color:#0062FF;cursor:pointer;text-decoration:underline;':''}" ${c.contactVal?`onclick="openContact('${c.id}')"`:''}>${c.contactVal||'-'}</div></div>
           <div><div class="detail-lbl">자격증</div><div class="detail-val" style="font-size:12px;">${c.cert||'-'}</div></div>
           <div><div class="detail-lbl">희망 급여</div><div class="detail-val" style="font-size:12px;">${c.salary||'협의'}</div></div>
-          <div><div class="detail-lbl">등록자</div><div class="detail-val" style="font-size:12px;">${c.authorName||'-'}</div></div>
         </div>
       </div>
       ${c.bio?`<div class="detail-sec"><div class="detail-lbl">소개</div><div style="font-size:13px;line-height:1.7;color:#374151;">${c.bio}</div></div>`:''}
@@ -958,6 +966,15 @@ window.openDetail=async id=>{
     </div>`;
   document.getElementById('detailModal').classList.add('on');
 };
+
+window.closeNoticeBanner=()=>{
+  document.getElementById('noticeBanner').style.display='none';
+  localStorage.setItem('noticeBannerClosed','1');
+};
+if(localStorage.getItem('noticeBannerClosed')==='1'){
+  const nb=document.getElementById('noticeBanner');
+  if(nb)nb.style.display='none';
+}
 
 window.closeModal=id=>document.getElementById(id).classList.remove('on');
 
