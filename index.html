@@ -450,7 +450,6 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
           <input type="text" id="f_career" class="mode-available" placeholder="5년">
           <div id="careerChips" class="chip-group mode-seeking" style="display:none;">
             <button type="button" class="chip-btn" data-val="경력자만" onclick="pickChip('f_career_h','careerChips',this)">경력자만</button>
-            <button type="button" class="chip-btn" data-val="신입 가능" onclick="pickChip('f_career_h','careerChips',this)">신입 가능</button>
             <button type="button" class="chip-btn" data-val="무관" onclick="pickChip('f_career_h','careerChips',this)">무관</button>
           </div>
           <input type="hidden" id="f_career_h">
@@ -513,7 +512,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
       </div>
       <div class="mo-footer">
         <button class="btn-cancel" onclick="closeModal('editModal')">취소</button>
-        <button class="btn-save" onclick="saveCoach()">등록하기</button>
+        <button class="btn-save" id="saveBtn" onclick="saveCoach()">등록하기</button>
       </div>
     </div>
   </div>
@@ -685,6 +684,7 @@ const REGIONS = {"서울특별시":{"강남구":["개포동","논현동","대치
 let coaches=[], currentUser=null, editingId=null, sportTags=[], regionList=[], currentView='list', searchQuery='', currentTab='all';
 let filterRegion={sido:'',sigungu:'',dong:''};
 let sharedAt=null, hasAccess=false, accessTimerInterval=null, pendingDetailId=null;
+let isSaving=false;
 
 onAuthStateChanged(auth, async user=>{
   if(user){
@@ -1055,58 +1055,69 @@ window.openEdit=id=>{
 };
 
 window.saveCoach=async()=>{
-  const name=document.getElementById('f_name').value.trim();
-  const contactVal=document.getElementById('f_contact_val').value.trim();
-  if(!name){showToast('이름 또는 닉네임은 필수입니다');return;}
-
-  if(!contactVal){showToast('연락 방법을 입력해주세요');return;}
-  if(sportTags.length===0){showToast('지도 종목을 입력해주세요');return;}
-  if(regionList.length===0){showToast('출강 가능 지역을 추가해주세요');return;}
-  const status=document.getElementById('f_status').value;
-  const isSeeking=status==='seeking';
-  let gender,age,career,ageMin=null,ageMax=null,ageAny=false;
-  if(isSeeking){
-    gender=document.getElementById('f_gender_h').value;
-    career=document.getElementById('f_career_h').value;
-    ageAny=document.getElementById('f_age_any').checked;
-    if(ageAny){
-      age='무관';
-    }else{
-      ageMin=parseInt(document.getElementById('f_age_min').value);
-      ageMax=parseInt(document.getElementById('f_age_max').value);
-      age=`${ageMin}~${ageMax}`;
-    }
-  }else{
-    gender=document.getElementById('f_gender').value;
-    career=document.getElementById('f_career').value.trim();
-    age=document.getElementById('f_age').value?parseInt(document.getElementById('f_age').value):null;
-  }
-  const data={
-    name,
-    gender,
-    age,
-    ageMin,
-    ageMax,
-    ageAny,
-    status,
-    career,
-    cert:document.getElementById('f_cert').value.trim(),
-    salary:document.getElementById('f_salary').value.trim(),
-    category:document.getElementById('f_category').value,
-    contactType:document.getElementById('f_contact_type').value,
-    contactVal,
-    sports:[...sportTags],
-    regions:[...regionList],
-    bio:document.getElementById('f_bio').value.trim(),
-    authorUid:currentUser.uid,
-    authorName:currentUser.displayName,
-    authorPhoto:currentUser.photoURL,
-  };
+  if(isSaving)return;
+  isSaving=true;
+  const saveBtn=document.getElementById('saveBtn');
+  const saveBtnOriginalText=saveBtn.textContent;
+  saveBtn.disabled=true;
+  saveBtn.textContent='등록 중...';
   try{
+    const name=document.getElementById('f_name').value.trim();
+    const contactVal=document.getElementById('f_contact_val').value.trim();
+    if(!name){showToast('이름 또는 닉네임은 필수입니다');return;}
+
+    if(!contactVal){showToast('연락 방법을 입력해주세요');return;}
+    if(sportTags.length===0){showToast('지도 종목을 입력해주세요');return;}
+    if(regionList.length===0){showToast('출강 가능 지역을 추가해주세요');return;}
+    const status=document.getElementById('f_status').value;
+    const isSeeking=status==='seeking';
+    let gender,age,career,ageMin=null,ageMax=null,ageAny=false;
+    if(isSeeking){
+      gender=document.getElementById('f_gender_h').value;
+      career=document.getElementById('f_career_h').value;
+      ageAny=document.getElementById('f_age_any').checked;
+      if(ageAny){
+        age='무관';
+      }else{
+        ageMin=parseInt(document.getElementById('f_age_min').value);
+        ageMax=parseInt(document.getElementById('f_age_max').value);
+        age=`${ageMin}~${ageMax}`;
+      }
+    }else{
+      gender=document.getElementById('f_gender').value;
+      career=document.getElementById('f_career').value.trim();
+      age=document.getElementById('f_age').value?parseInt(document.getElementById('f_age').value):null;
+    }
+    const data={
+      name,
+      gender,
+      age,
+      ageMin,
+      ageMax,
+      ageAny,
+      status,
+      career,
+      cert:document.getElementById('f_cert').value.trim(),
+      salary:document.getElementById('f_salary').value.trim(),
+      category:document.getElementById('f_category').value,
+      contactType:document.getElementById('f_contact_type').value,
+      contactVal,
+      sports:[...sportTags],
+      regions:[...regionList],
+      bio:document.getElementById('f_bio').value.trim(),
+      authorUid:currentUser.uid,
+      authorName:currentUser.displayName,
+      authorPhoto:currentUser.photoURL,
+    };
     if(editingId){await updateDoc(doc(db,'coaches',editingId),{...data,updatedAt:serverTimestamp()});showToast('✅ 수정되었습니다');}
     else{data.createdAt=serverTimestamp();await addDoc(collection(db,'coaches'),data);showToast('✅ 등록되었습니다');}
     closeModal('editModal'); await loadCoaches();
   }catch(e){showToast('저장 실패: '+e.message);}
+  finally{
+    isSaving=false;
+    saveBtn.disabled=false;
+    saveBtn.textContent=saveBtnOriginalText;
+  }
 };
 
 window.deleteCoach=async id=>{
@@ -1482,11 +1493,13 @@ window.openTypeModal=()=>{
 
 window.selectType=status=>{
   closeModal('typeModal');
-  // 한 계정당 1글 제한 미리 체크
-  const myPosts=coaches.filter(c=>c.authorUid===currentUser?.uid&&c.status===status);
-  if(myPosts.length>0){
-    showToast(status==='available'?'구직 글은 1개만 등록 가능해요. 내 글 관리에서 수정해주세요.':'채용 글은 1개만 등록 가능해요. 내 글 관리에서 수정해주세요.');
-    return;
+  // 한 계정당 1글 제한 미리 체크 (관리자는 무제한)
+  if(currentUser?.uid!==ADMIN_UID){
+    const myPosts=coaches.filter(c=>c.authorUid===currentUser?.uid&&c.status===status);
+    if(myPosts.length>0){
+      showToast(status==='available'?'구직 글은 1개만 등록 가능해요. 내 글 관리에서 수정해주세요.':'채용 글은 1개만 등록 가능해요. 내 글 관리에서 수정해주세요.');
+      return;
+    }
   }
   openAddModal(status);
 };
