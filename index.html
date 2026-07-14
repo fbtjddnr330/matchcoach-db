@@ -574,6 +574,12 @@ document.getElementById('headerLogo').src = LOGO;
 
 const MAIN_SPORTS = ['축구','농구','줄넘기','배드민턴','클라이밍','댄스','피트니스','수영','테니스','태권도','복싱','아크로바틱','요가','필라테스'];
 const ADMIN_UID = 'd7QYShvsv9WihlczimfuIndo41s2';
+// 관리자 전용 공유 게이트 강제 테스트 모드: URL에 ?testgate=1 붙이면 본인 글/기존 열람권 무시하고 항상 게이트 표시
+const TEST_GATE = new URLSearchParams(location.search).get('testgate')==='1';
+function shouldGate(c){
+  if(currentUser?.uid===ADMIN_UID && TEST_GATE) return true;
+  return c.authorUid!==currentUser?.uid && !hasAccess;
+}
 const REPORT_THRESHOLD = 5;
 const COMPLETION_THRESHOLD = 3;
 const CONTACT_LABELS = {kakao:'카카오 오픈채팅',insta:'인스타그램',email:'이메일',phone:'전화번호',other:'링크'};
@@ -1147,7 +1153,7 @@ window.deleteCoach=async id=>{
 window.openContact=id=>{
   const c=coaches.find(x=>x.id===id);
   if(!c)return;
-  if(c.authorUid!==currentUser?.uid && !hasAccess){
+  if(shouldGate(c)){
     pendingDetailId=id;
     resetShareGateModal();
     document.getElementById('shareGateModal').classList.add('on');
@@ -1161,7 +1167,7 @@ window.openDetail=async id=>{
   const c=coaches.find(x=>x.id===id);
   if(!c)return;
   // 내 글이 아니고 열람권이 없으면 상세보기 대신 공유 유도 모달
-  if(c.authorUid!==currentUser?.uid && !hasAccess){
+  if(shouldGate(c)){
     pendingDetailId=id;
     resetShareGateModal();
     document.getElementById('shareGateModal').classList.add('on');
