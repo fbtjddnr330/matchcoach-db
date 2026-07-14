@@ -285,7 +285,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
   <div class="notice-banner" id="noticeBanner">
     <div class="notice-text">
       <div>📌 등록 후 30일이 지난 글은 자동으로 흐려집니다. '갱신' 버튼으로 유지해주세요.</div>
-      <div>🚩 신고가 <span id="reportThresholdText">5</span>회 누적되면 자동으로 가려지며, 관리자 확인 후 조치됩니다.</div>
+      <div>🚩 신고가 누적되면 자동으로 가려지며, 관리자 확인 후 조치됩니다.</div>
     </div>
     <button class="notice-close" onclick="closeNoticeBanner()">✕</button>
   </div>
@@ -703,6 +703,31 @@ function updateStats(){
   document.getElementById('hiringCount').textContent=coaches.filter(c=>c.status==='seeking').length;
   document.getElementById('cnt_seek').textContent=coaches.filter(c=>c.status==='available').length;
   document.getElementById('cnt_hire').textContent=coaches.filter(c=>c.status==='seeking').length;
+  checkBlindedNotif();
+}
+
+// ── 블라인드 처리 알림 배지 (관리자 탭) ──
+function checkBlindedNotif(){
+  const tabBtn=document.getElementById('tab_admin');
+  if(!tabBtn||currentUser?.uid!==ADMIN_UID)return;
+  const seen=JSON.parse(localStorage.getItem('seenBlindedIds')||'[]');
+  const blindedIds=coaches.filter(c=>c.blinded).map(c=>c.id);
+  const hasNew=blindedIds.some(id=>!seen.includes(id));
+  let dot=document.getElementById('adminNotifDot');
+  if(hasNew){
+    if(!dot){
+      dot=document.createElement('span');
+      dot.id='adminNotifDot';
+      dot.style.cssText='display:inline-block;width:7px;height:7px;border-radius:50%;background:#DC2626;margin-left:5px;vertical-align:middle;';
+      tabBtn.appendChild(dot);
+    }
+  }else if(dot){
+    dot.remove();
+  }
+}
+function markBlindedSeen(){
+  localStorage.setItem('seenBlindedIds',JSON.stringify(coaches.filter(c=>c.blinded).map(c=>c.id)));
+  checkBlindedNotif();
 }
 
 function buildSportFilters(){
@@ -1070,10 +1095,6 @@ window.closeNoticeBanner=()=>{
   document.getElementById('noticeBanner').style.display='none';
   localStorage.setItem('noticeBannerClosed','1');
 };
-{
-  const rt=document.getElementById('reportThresholdText');
-  if(rt)rt.textContent=REPORT_THRESHOLD;
-}
 if(localStorage.getItem('noticeBannerClosed')==='1'){
   const nb=document.getElementById('noticeBanner');
   if(nb)nb.style.display='none';
@@ -1196,7 +1217,7 @@ window.reportPost=async id=>{
   const c=coaches.find(x=>x.id===id);
   if(!c||c.authorUid===currentUser?.uid){showToast('본인 글은 신고할 수 없어요');return;}
   if((c.reportedBy||[]).includes(currentUser.uid)){showToast('이미 신고한 글이에요');return;}
-  if(!confirm(`이 글을 신고하시겠습니까?\n허위 또는 부적절한 글만 신고해주세요.\n신고가 ${REPORT_THRESHOLD}회 누적되면 자동으로 가려지고 관리자 확인 후 조치됩니다.`)){return;}
+  if(!confirm('이 글을 신고하시겠습니까?\n허위 또는 부적절한 글만 신고해주세요.\n신고가 누적되면 자동으로 가려지고 관리자 확인 후 조치됩니다.')){return;}
   try{
     const newCnt=(c.reportCount||0)+1;
     const shouldBlind=newCnt>=REPORT_THRESHOLD;
@@ -1208,8 +1229,9 @@ window.reportPost=async id=>{
     c.reportCount=newCnt;
     c.reportedBy=[...(c.reportedBy||[]),currentUser.uid];
     if(shouldBlind){c.blinded=true;}
-    showToast(shouldBlind?`신고 ${REPORT_THRESHOLD}회 누적으로 블라인드 처리됐습니다`:'신고가 접수됐습니다');
+    showToast(shouldBlind?'신고 누적으로 블라인드 처리됐습니다':'신고가 접수됐습니다');
     render();
+    checkBlindedNotif();
     closeModal('detailModal');
   }catch(e){showToast('신고 실패: '+e.message);}
 };
@@ -1232,7 +1254,7 @@ window.switchTab=tab=>{
     const el=document.getElementById('tab_'+t);
     if(el) el.classList.toggle('on',t===tab);
   });
-  if(tab==='admin'){renderAdmin();}
+  if(tab==='admin'){renderAdmin();markBlindedSeen();}
   else{render();}
 };
 
