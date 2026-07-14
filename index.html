@@ -922,10 +922,9 @@ function render(){
       const old=isOldPost(c.createdAt);
       const reportCnt=c.reportCount||0;
       const blinded=c.blinded||false;
-      const completeLabel=c.status==='seeking'?'채용완료':'구직완료';
       const actions=isMine
         ?``
-        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded&&!isMine?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="부적절한 글을 신고합니다" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:11px;white-space:nowrap;">🚩 신고</button><button class="btn-report" onclick="event.stopPropagation();markCompleted('${c.id}')" title="이미 ${completeLabel}된 글이라면 표시해주세요" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:11px;white-space:nowrap;">✅ ${completeLabel}</button>`:''}`;
+        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>`;
 
       const bg=idx%2===0?'background:white;':'background:#FAFAFA;';
       const rowCls=`tbl-row${isMine?' mine':''}${blinded?' blinded':''}${old?' old-post':''}`;
@@ -958,10 +957,9 @@ function render(){
       const sportHtml=vis.map(s=>`<span class="s-tag">#${s}</span>`).join('')+(extra>0?`<span class="s-more">+${extra}</span>`:'');
       const blinded=c.blinded||false;
       const old=isOldPost(c.createdAt);
-      const completeLabel=c.status==='seeking'?'채용완료':'구직완료';
       const actions=isMine
         ?''
-        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>${!blinded?`<button class="btn-report" onclick="event.stopPropagation();reportPost('${c.id}')" title="부적절한 글을 신고합니다" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:11px;white-space:nowrap;">🚩 신고</button><button class="btn-report" onclick="event.stopPropagation();markCompleted('${c.id}')" title="이미 ${completeLabel}된 글이라면 표시해주세요" style="padding:5px 7px;border-radius:6px;background:#F9FAFB;border:1px solid #E5E7EB;cursor:pointer;font-size:11px;white-space:nowrap;">✅ ${completeLabel}</button>`:''}`;
+        :`<button class="btn-contact" onclick="event.stopPropagation();openContact('${c.id}')">연락하기</button>`;
       return `<div class="g-card${isMine?' mine':''}${blinded?' blinded':''}${old?' old-post':''}" onclick="openDetail('${c.id}')">
         <div class="g-card-top">
           <div class="av" style="background:${color}">${avInner}</div>
@@ -1182,9 +1180,9 @@ window.openDetail=async id=>{
         ?`<button style="flex:1;padding:11px;font-size:13px;border-radius:9px;background:#DCFCE7;color:#15803D;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="renewPost('${c.id}')">🔄 갱신</button>
           <button class="btn-edit-s" style="flex:1;padding:11px;font-size:13px;border-radius:9px;" onclick="openEdit('${c.id}')">✏️ 수정</button>
           <button class="btn-del-s" style="flex:1;padding:11px;font-size:13px;border-radius:9px;" onclick="deleteCoach('${c.id}')">🗑 삭제</button>`
-        :`<button class="btn-contact" style="flex:2;padding:11px;font-size:14px;border-radius:9px;" onclick="openContact('${c.id}')">📞 연락하기</button>
-          <button class="btn-report" style="padding:11px 14px;border-radius:9px;font-size:13px;" onclick="markCompleted('${c.id}')" title="이미 완료된 글이라면 표시해주세요">✅ ${completeLabel}</button>
-          <button class="btn-report" style="padding:11px 14px;border-radius:9px;font-size:13px;" onclick="reportPost('${c.id}')" title="신고">🚩 신고</button>`
+        :`<button class="btn-contact" style="flex:2;padding:11px;font-size:14px;border-radius:9px;" onclick="openContact('${c.id}')">연락하기</button>
+          <button class="btn-report" style="padding:11px 14px;border-radius:9px;font-size:13px;" onclick="markCompleted('${c.id}')" title="이미 완료된 글이라면 표시해주세요">${completeLabel}</button>
+          <button class="btn-report" style="padding:11px 14px;border-radius:9px;font-size:13px;" onclick="reportPost('${c.id}')" title="신고">신고</button>`
       }
     </div>`;
   document.getElementById('detailModal').classList.add('on');
