@@ -244,7 +244,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
   .age-range-row{flex-wrap:wrap;}
 }
 </style>
-<script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"></script>
 <script>if(window.Kakao&&!Kakao.isInitialized()){Kakao.init('a113410eae959838bdf492102b33162a');}</script>
 </head>
 <body>
@@ -744,7 +744,7 @@ function updateAccessState(){
 
 window.shareToKakao=()=>{
   if(!window.Kakao||!Kakao.isInitialized()){showToast('카카오 공유 기능을 불러오지 못했습니다');return;}
-  Kakao.Link.sendDefault({
+  Kakao.Share.sendDefault({
     objectType:'feed',
     content:{
       title:'매치코치 - 스포츠강사 구인구직',
