@@ -344,7 +344,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
       <div class="tab-bar">
         <button class="tab-btn on" id="tab_all" onclick="switchTab('all')">전체 글</button>
         <button class="tab-btn" id="tab_mine" onclick="switchTab('mine')">내 글 관리</button>
-        <button class="tab-btn" id="tab_admin" onclick="switchTab('admin')" id="adminTab" style="display:none">🛡 관리자</button>
+        <button class="tab-btn" id="tab_admin" onclick="switchTab('admin')" style="display:none">🛡 관리자</button>
       </div>
       <div class="main-header">
         <div class="result-txt"><strong id="filteredCount">0</strong>명 표시 중</div>
@@ -678,7 +678,7 @@ onAuthStateChanged(auth, user=>{
     loadCoaches();
     // 관리자 탭 표시
     if(user.uid === ADMIN_UID) {
-      document.getElementById('adminTab').style.display = 'block';
+      document.getElementById('tab_admin').style.display = 'block';
     }
   } else {
     currentUser=null;
