@@ -849,7 +849,7 @@ window.signInWithGoogle=async()=>{
 window.signOut=async()=>{await fbSignOut(auth);showToast('로그아웃 되었습니다');};
 
 async function loadCoaches(){
-  const q=query(collection(db,'coaches'),orderBy('createdAt','desc'));
+  const q=query(collection(db,'coaches'),orderBy('createdAt','asc'));
   const snap=await getDocs(q);
   coaches=snap.docs.map(d=>({id:d.id,...d.data()}));
   updateStats(); render();
@@ -1291,7 +1291,8 @@ window.openDetail=async id=>{
           <button class="btn-del-s" style="flex:1;padding:11px;font-size:13px;border-radius:9px;" onclick="deleteCoach('${c.id}')">🗑 삭제</button>`
         :`<button class="btn-contact" style="flex:2;padding:11px;font-size:14px;border-radius:9px;" onclick="openContact('${c.id}')">연락하기</button>
           <button class="btn-report" style="padding:11px 14px;border-radius:9px;font-size:13px;" onclick="markCompleted('${c.id}')" title="이미 완료된 글이라면 표시해주세요">${completeLabel}</button>
-          <button class="btn-report" style="padding:11px 14px;border-radius:9px;font-size:13px;" onclick="reportPost('${c.id}')" title="신고">신고</button>`
+          <button class="btn-report" style="padding:11px 14px;border-radius:9px;font-size:13px;" onclick="reportPost('${c.id}')" title="신고">신고</button>
+          ${currentUser?.uid===ADMIN_UID?`<button class="btn-del-s" style="padding:11px 14px;border-radius:9px;font-size:13px;" onclick="adminDeleteFromDetail('${c.id}')" title="관리자 삭제">🗑 삭제</button>`:''}`
       }
     </div>`;
   document.getElementById('detailModal').classList.add('on');
@@ -1581,6 +1582,17 @@ window.adminDelete=async id=>{
     showToast('🗑 글이 삭제됐습니다');
     await loadCoaches();
     renderAdmin();
+  }catch(e){showToast('삭제 실패: '+e.message);}
+};
+
+window.adminDeleteFromDetail=async id=>{
+  if(currentUser?.uid!==ADMIN_UID)return;
+  if(!confirm('이 글을 완전히 삭제하시겠습니까?'))return;
+  try{
+    await deleteDoc(doc(db,'coaches',id));
+    showToast('🗑 글이 삭제됐습니다');
+    closeModal('detailModal');
+    await loadCoaches();
   }catch(e){showToast('삭제 실패: '+e.message);}
 };
 
