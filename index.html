@@ -100,6 +100,7 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
 .av img{width:100%;height:100%;object-fit:cover;}
 .name-txt{font-size:13px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sub-txt{font-size:10px;color:#9CA3AF;}
+.mob-meta{display:none;}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
 .badge.seek{background:#DCFCE7;color:#15803D;}
 .badge.hire{background:#EFF6FF;color:#1D4ED8;}
@@ -245,12 +246,20 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
   .sidebar{display:none;width:100%;position:static;top:auto;}
   .sidebar.mobile-open{display:block;margin-bottom:12px;}
 
-  /* 리스트 보기 — 표 대신 카드형으로 쌓기 */
+  /* 리스트 보기 — 연락처 앱처럼 한 줄짜리 컴팩트 목록 */
+  .tbl-wrap{border-radius:0;border-left:none;border-right:none;margin:0 -12px;}
   .tbl-head{display:none;}
-  .tbl-row{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:12px 14px;}
-  .tbl-row.mine{padding-left:11px;}
-  .cell-sports{flex-wrap:wrap;}
-  .cell-action{justify-content:flex-start;}
+  .tbl-row{display:flex;align-items:center;gap:8px;padding:9px 14px;min-height:52px;}
+  .tbl-row.mine{padding-left:12px;}
+  .tbl-row .cell-profile{flex:1;min-width:0;}
+  .tbl-row .av{width:32px;height:32px;font-size:12px;}
+  .tbl-row .name-txt{font-size:14px;}
+  .tbl-row .sub-txt,.tbl-row .date-txt{display:none;}
+  .tbl-row .mob-meta{display:block;font-size:11px;color:#9CA3AF;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .tbl-row .cell-status{order:3;flex-shrink:0;}
+  .tbl-row .cell-status .badge{padding:0;background:none!important;font-size:0;gap:0;}
+  .tbl-row .cell-status .bdot{width:8px;height:8px;}
+  .tbl-row .cell-sports,.tbl-row .cell-region,.tbl-row .cell-action{display:none;}
 
   /* 글 등록/수정 모달 — 2열 → 1열 */
   .mo-body{padding:16px;}
@@ -979,6 +988,7 @@ function render(){
       const avInner=c.authorPhoto?`<img src="${c.authorPhoto}" alt="">`:(c.name||'?').charAt(0);
       const max=3; const vis=(c.sports||[]).slice(0,max); const extra=(c.sports||[]).length-max;
       const sportHtml=vis.map(s=>`<span class="s-tag">#${s}</span>`).join('')+(extra>0?`<span class="s-more">+${extra}</span>`:'');
+      const sportPlain=vis.join(', ')+(extra>0?` +${extra}`:'');
       const regionLabel=renderRegionLabel(c.regions||[]);
       const dateStr=formatDate(c.createdAt);
       const old=isOldPost(c.createdAt);
@@ -997,9 +1007,10 @@ function render(){
             <div class="name-txt">${c.name}${isMine?'<span style="font-size:9px;color:#0062FF;margin-left:4px;">내글</span>':''}${old?`<span class="badge-old" title="등록 후 30일이 지나 흐리게 표시돼요. ${isMine?'\'갱신\' 버튼을 누르면 다시 선명해져요.':'작성자가 갱신하면 다시 선명해져요.'}">⏰ 갱신 필요</span>`:''}</div>
             <div class="sub-txt">${c.gender||'-'} · ${c.age?c.age+'세':'-'} · ${c.career||'-'}</div>
             <div class="date-txt">${dateStr}${c.viewCount?` · 조회 ${c.viewCount}`:''}</div>
+            <div class="mob-meta">${sportPlain}${sportPlain&&regionLabel?' · ':''}${regionLabel?'📍 '+regionLabel:''}</div>
           </div>
         </div>
-        <div><span class="badge ${st.cls}"><span class="bdot"></span>${st.label}</span></div>
+        <div class="cell-status"><span class="badge ${st.cls}"><span class="bdot"></span>${st.label}</span></div>
         <div class="cell-sports">${sportHtml}</div>
         <div class="cell-region">📍 ${regionLabel}</div>
         <div class="cell-action">${isMine ? '' : `<span onclick="event.stopPropagation()">${actions}</span>`}</div>
