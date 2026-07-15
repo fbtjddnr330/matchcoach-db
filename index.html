@@ -902,6 +902,19 @@ function buildSportFilters(){
 
 function getChecked(id){return document.getElementById(id)?.checked;}
 function getAgeGroup(age){if(!age)return null;if(age<30)return'20';if(age<40)return'30';if(age<50)return'40';return'50';}
+function getAgeGroups(c){
+  if(c.ageAny||c.age==='무관')return['20','30','40','50'];
+  if(c.ageMin!=null&&c.ageMax!=null){
+    const groups=[];
+    if(c.ageMax>=20&&c.ageMin<30)groups.push('20');
+    if(c.ageMax>=30&&c.ageMin<40)groups.push('30');
+    if(c.ageMax>=40&&c.ageMin<50)groups.push('40');
+    if(c.ageMax>=50)groups.push('50');
+    return groups;
+  }
+  const g=getAgeGroup(c.age);
+  return g?[g]:[];
+}
 
 function formatDate(ts){
   if(!ts) return '';
@@ -953,8 +966,11 @@ function getFiltered(){
     if(c.blinded && currentUser?.uid!==ADMIN_UID && c.authorUid!==currentUser?.uid) return false;
     if(c.completed && currentUser?.uid!==ADMIN_UID && c.authorUid!==currentUser?.uid) return false;
     if(statusOn.length&&!statusOn.includes(c.status))return false;
-    if(genderOn.length&&!genderOn.includes(c.gender))return false;
-    if(ageOn.length&&!ageOn.includes(getAgeGroup(c.age)))return false;
+    if(genderOn.length){
+      const g=c.gender==='남자'?'남':c.gender==='여자'?'여':c.gender;
+      if(g!=='무관'&&!genderOn.includes(g))return false;
+    }
+    if(ageOn.length&&!getAgeGroups(c).some(g=>ageOn.includes(g)))return false;
     if(sportOn.length&&!sportOn.every(s=>(c.sports||[]).some(cs=>cs.includes(s)||s.includes(cs))))return false;
     if(sido){
       const match=(c.regions||[]).some(r=>{
