@@ -211,10 +211,12 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
 .btn-save{flex:2;padding:11px;border-radius:9px;background:#0062FF;color:white;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
 
 /* DETAIL */
-.detail-hero{background:linear-gradient(135deg,#1A2E46,#0F1B2D);padding:24px;display:flex;align-items:center;gap:16px;position:relative;}
+.detail-hero{background:#0F1B2D;padding:24px;padding-right:56px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;}
 .detail-av{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:white;flex-shrink:0;overflow:hidden;}
-.detail-nm{font-size:20px;font-weight:900;color:white;margin-bottom:3px;}
-.detail-sub{font-size:12px;color:#9CA3AF;}
+.detail-av img{width:100%;height:100%;object-fit:cover;}
+.detail-nm{font-size:20px;font-weight:900;color:white;margin-bottom:4px;word-break:break-word;}
+.detail-sub{font-size:12.5px;color:#D1D5DB;}
+.detail-mine-badge{font-size:11px;font-weight:700;color:#BFDBFE;background:rgba(255,255,255,0.16);padding:3px 9px;border-radius:20px;}
 .detail-body{padding:20px 24px 24px;}
 .detail-sec{margin-bottom:18px;}
 .detail-lbl{font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;}
@@ -1350,12 +1352,12 @@ window.openDetail=async id=>{
   const ctLabel=CONTACT_LABELS[c.contactType]||'연락처';
   const completeLabel=c.status==='seeking'?'채용완료':'구직완료';
   document.getElementById('detailContent').innerHTML=`
-    <div class="detail-hero" style="background:linear-gradient(135deg,${color}22,#0F1B2D);">
+    <div class="detail-hero" style="background:linear-gradient(135deg,${color}55,transparent 60%),#0F1B2D;">
       <div class="detail-av" style="background:${color}">${avInner}</div>
-      <div>
-        <div class="detail-nm">${c.name}${isMine?'<span style="font-size:13px;color:#0062FF;margin-left:8px;">내 글</span>':''}</div>
+      <div style="min-width:0;flex:1;">
+        <div class="detail-nm">${c.name}</div>
         <div class="detail-sub">${c.gender||''} ${ageBadgeText(c)?'· '+ageBadgeText(c):''} ${c.career?'· '+c.career+' 경력':''}</div>
-        <div style="margin-top:8px"><span class="badge ${st.cls}"><span class="bdot"></span>${st.label}</span></div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;"><span class="badge ${st.cls}"><span class="bdot"></span>${st.label}</span>${isMine?'<span class="detail-mine-badge">내 글</span>':''}</div>
       </div>
       <button class="mo-close" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);color:white;" onclick="closeModal('detailModal')">✕</button>
     </div>
