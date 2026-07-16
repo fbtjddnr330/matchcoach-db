@@ -1481,6 +1481,8 @@ window.resetRegion=()=>{
   document.getElementById('fSigungu').innerHTML='<option value="">시/군/구</option>';
   document.getElementById('fDong').innerHTML='<option value="">동/읍/면</option>';
   filterRegion={sido:'',sigungu:'',dong:''};
+  document.getElementById('searchInput').value='';
+  searchQuery='';
   renderLimit=PAGE_SIZE;
   render();
 };
