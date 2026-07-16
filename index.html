@@ -730,6 +730,13 @@ function setAgeSlider(minV,maxV,any){
   onAgeSliderChange('min');
   onAgeAnyToggle();
 }
+function ageBadgeText(c){
+  if(c.ageAny||c.age==='무관')return'무관';
+  if(c.ageMin!=null&&c.ageMax!=null)return`${c.ageMin}~${c.ageMax}세`;
+  const ageStr=(c.age||'').toString();
+  if(ageStr.includes('~'))return ageStr+'세';
+  return c.age?c.age+'세':'';
+}
 function formatAgePref(c){
   if(c.ageAny)return'나이 무관';
   if(c.ageMin!=null&&c.ageMax!=null)return`${c.ageMin}세 ~ ${c.ageMax}세`;
@@ -1105,7 +1112,7 @@ function render(){
           <div class="av" style="background:${color}">${avInner}</div>
           <div style="min-width:0;">
             <div class="name-txt">${c.name}${isMine?'<span style="font-size:9px;color:#0062FF;margin-left:4px;">내글</span>':''}${old?`<span class="badge-old" title="등록 후 30일이 지나 흐리게 표시돼요. ${isMine?'\'갱신\' 버튼을 누르면 다시 선명해져요.':'작성자가 갱신하면 다시 선명해져요.'}">⏰ 갱신 필요</span>`:''}</div>
-            <div class="sub-txt">${c.gender||'-'} · ${c.age?c.age+'세':'-'} · ${c.career||'-'}</div>
+            <div class="sub-txt">${c.gender||'-'} · ${ageBadgeText(c)||'-'} · ${c.career||'-'}</div>
             <div class="date-txt">${dateStr}${c.viewCount?` · 조회 ${c.viewCount}`:''}</div>
             <div class="mob-meta">${sportPlain}${sportPlain&&regionLabel?' · ':''}${regionLabel?'📍 '+regionLabel:''}</div>
           </div>
@@ -1139,7 +1146,7 @@ function render(){
           <div class="av" style="background:${color}">${avInner}</div>
           <div style="min-width:0;flex:1;">
             <div class="name-txt">${c.name}${old?`<span class="badge-old" title="등록 후 30일이 지나 흐리게 표시돼요. ${isMine?'\'갱신\' 버튼을 누르면 다시 선명해져요.':'작성자가 갱신하면 다시 선명해져요.'}">⏰ 갱신 필요</span>`:''}</div>
-            <div class="sub-txt">${c.gender||'-'} · ${c.age?c.age+'세':'-'}</div>
+            <div class="sub-txt">${c.gender||'-'} · ${ageBadgeText(c)||'-'}</div>
           </div>
           <span class="badge ${st.cls}"><span class="bdot"></span>${st.label}</span>
         </div>
@@ -1347,7 +1354,7 @@ window.openDetail=async id=>{
       <div class="detail-av" style="background:${color}">${avInner}</div>
       <div>
         <div class="detail-nm">${c.name}${isMine?'<span style="font-size:13px;color:#0062FF;margin-left:8px;">내 글</span>':''}</div>
-        <div class="detail-sub">${c.gender||''} ${c.age?'· '+c.age+'세':''} ${c.career?'· '+c.career+' 경력':''}</div>
+        <div class="detail-sub">${c.gender||''} ${ageBadgeText(c)?'· '+ageBadgeText(c):''} ${c.career?'· '+c.career+' 경력':''}</div>
         <div style="margin-top:8px"><span class="badge ${st.cls}"><span class="bdot"></span>${st.label}</span></div>
       </div>
       <button class="mo-close" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);color:white;" onclick="closeModal('detailModal')">✕</button>
@@ -1364,7 +1371,7 @@ window.openDetail=async id=>{
           ${c.status==='seeking'&&formatAgePref(c)?`<div><div class="detail-lbl">선호 연령대</div><div class="detail-val" style="font-size:12px;">${formatAgePref(c)}</div></div>`:''}
         </div>
       </div>
-      ${c.bio?`<div class="detail-sec"><div class="detail-lbl">소개</div><div style="font-size:13px;line-height:1.7;color:#374151;">${c.bio}</div></div>`:''}
+      ${c.bio?`<div class="detail-sec"><div class="detail-lbl">소개</div><div style="font-size:13px;line-height:1.7;color:#374151;white-space:pre-wrap;word-break:break-word;">${c.bio}</div></div>`:''}
     </div>
     <div class="detail-actions">
       ${isMine
