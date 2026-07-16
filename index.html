@@ -25,7 +25,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans KR',sans-serif;background:#F4F6F8;color:#111827;min-height:100vh;}
+html{overflow-x:hidden;}
+body{font-family:'Noto Sans KR',sans-serif;background:#F4F6F8;color:#111827;min-height:100vh;overflow-x:hidden;}
+body:has(.mo.on){overflow:hidden;}
 
 /* LOGIN */
 #loginScreen{position:fixed;inset:0;background:rgba(15,27,45,0.7);backdrop-filter:blur(3px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.2s;}
@@ -154,15 +156,15 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
 .fg{display:flex;flex-direction:column;gap:5px;}
 .fg.full{grid-column:1/-1;}
 .fg label{font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.4px;}
-.fg input,.fg select,.fg textarea{padding:9px 12px;border-radius:8px;border:1.5px solid #E5E7EB;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;color:#111827;transition:border-color 0.15s;}
+.fg input,.fg select,.fg textarea{width:100%;min-width:0;padding:9px 12px;border-radius:8px;border:1.5px solid #E5E7EB;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;color:#111827;transition:border-color 0.15s;}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#0062FF;}
 .fg textarea{resize:vertical;min-height:70px;}
 
 /* 연락처 타입 */
-.contact-row{display:flex;gap:8px;}
+.contact-row{display:flex;gap:8px;flex-wrap:wrap;}
 .contact-type{padding:9px 12px;border-radius:8px;border:1.5px solid #E5E7EB;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;color:#111827;background:white;width:130px;flex-shrink:0;}
 .contact-type:focus{border-color:#0062FF;}
-.contact-val{flex:1;padding:9px 12px;border-radius:8px;border:1.5px solid #E5E7EB;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;color:#111827;}
+.contact-val{flex:1;min-width:140px;padding:9px 12px;border-radius:8px;border:1.5px solid #E5E7EB;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;color:#111827;}
 .contact-val:focus{border-color:#0062FF;}
 
 /* 태그 입력 */
@@ -290,6 +292,8 @@ header{background:#0F1B2D;border-bottom:2px solid #0062FF;position:sticky;top:0;
   .tbl-row .cell-sports,.tbl-row .cell-region,.tbl-row .cell-action{display:none;}
 
   /* 글 등록/수정 모달 — 2열 → 1열 */
+  .mo{padding:10px;}
+  .mo-box{max-width:100%;}
   .mo-body{padding:16px;}
   .mo-head{padding:16px 16px 14px;}
   .form-grid{grid-template-columns:1fr;}
